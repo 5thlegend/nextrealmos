@@ -101,3 +101,65 @@ The path to full SSR deploy is unchanged from V1 GENESIS:
 1. **(Recommended)** Push to GitHub → connect Cloudflare Pages → build runs on Linux
 2. Enable Windows Developer Mode (Settings → For developers → Developer Mode → On) → re-run `vercel build`
 3. Build from WSL (`wsl --install`) → deploy from there
+
+---
+
+## 2026-05-11 12:09 — **SSR APP LIVE** at nextrealmos.pages.dev
+
+**Live URL:** <https://nextrealmos.pages.dev>
+**This deploy:** <https://e9192e91.nextrealmos.pages.dev>
+**Commit:** `003ac0f` on `main`
+**Verified routes:**
+- `GET /` → HTTP 200 · 20.6 KB (Next.js SSR landing with full font loading)
+- `GET /sign-in` → HTTP 200 · 12.6 KB (Suspense-wrapped form rendered)
+- `GET /dashboard` → HTTP 307 (middleware redirect to /sign-in; auth gating works)
+- `GET /transmissions` → HTTP 307 (auth gating)
+- `GET /api/federation/realms` → HTTP 200 · `{"realms":[]}` (federation API live)
+
+### How it shipped
+
+Bypassed the Cloudflare Pages dashboard git connection entirely. Pipeline:
+
+1. **GitHub Actions** (`.github/workflows/build.yml`) on every push to `main`:
+   - `ubuntu-latest` runner with Node 22
+   - `npm install --legacy-peer-deps`
+   - `npx @cloudflare/next-on-pages@1` builds `.vercel/output/static`
+   - Stashes built output to `/tmp/built` before destroying tree
+   - Force-pushes contents to `built-output` branch
+   - Publishes build log to `build-log` branch (every run, even on failure)
+2. **Local** `deploy-from-built.sh` script:
+   - `git fetch origin built-output`
+   - `git worktree add /tmp/nros-built built-output`
+   - `wrangler pages deploy /tmp/nros-built --project-name=nextrealmos --branch=main`
+   - Cleans up worktree
+3. **Cloudflare API** (via wrangler OAuth token):
+   - `PATCH /accounts/{id}/pages/projects/nextrealmos` to set `nodejs_compat`
+     compatibility flag on production + preview
+   - Same call sets 6 env vars (3 plain, 3 secrets) — all stub values for V2
+
+### Build evolution (each push triggered a new build)
+
+| sha | Status | Fix |
+|---|---|---|
+| 6f58572 | failure | Initial workflow scaffold |
+| 147d371 | failure | Added build-log branch capture |
+| 5545abd | success (build) / failure (publish) | Added edge runtime to `/auth/sign-out` |
+| 003ac0f | **success** | Stashed `/tmp/built` before destroying tree |
+
+### What's deployed but stubbed
+
+Auth, dashboard, missions, squads, leaderboard, workflows, GENUBRA panel,
+OBLISK engine, federation API — all rendering. Backend calls go to stub
+URLs and return graceful empty responses.
+
+### Pending — real backend wiring
+
+To activate full functionality:
+
+1. **Supabase project** — create at supabase.com, run
+   `supabase/migrations/0001_kernel_init.sql` + `0002_federation.sql`
+2. **API keys** — Anthropic + OpenAI from their consoles
+3. **Update Pages env vars** — replace stub values via API or dashboard:
+   - `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY` / `ANTHROPIC_API_KEY` / `OPENAI_API_KEY`
+4. Trigger redeploy (push any commit OR call wrangler deploy again)
