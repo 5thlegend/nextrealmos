@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 220 30% 4%;
+    --foreground: 210 40% 96%;
+
+    --card: 220 24% 7%;
+    --card-foreground: 210 40% 96%;
+
+    --popover: 220 30% 5%;
+    --popover-foreground: 210 40% 96%;
+
+    --primary: 178 92% 56%;
+    --primary-foreground: 220 30% 4%;
+
+    --secondary: 220 14% 14%;
+    --secondary-foreground: 210 40% 96%;
+
+    --muted: 220 14% 14%;
+    --muted-foreground: 215 16% 60%;
+
+    --accent: 258 80% 70%;
+    --accent-foreground: 220 30% 4%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 220 14% 16%;
+    --input: 220 14% 16%;
+    --ring: 178 92% 56%;
+
+    --radius: 0.5rem;
+  }
+
+  * { @apply border-border; }
+
+  html, body { height: 100%; }
+
+  body {
+    @apply bg-background text-foreground antialiased font-sans;
+    background-image:
+      radial-gradient(1200px 600px at 0% -10%, hsla(178, 92%, 56%, 0.06), transparent 60%),
+      radial-gradient(900px 500px at 100% 110%, hsla(258, 80%, 70%, 0.06), transparent 55%),
+      linear-gradient(hsla(180, 30%, 70%, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, hsla(180, 30%, 70%, 0.02) 1px, transparent 1px);
+    background-size: auto, auto, 32px 32px, 32px 32px;
+  }
+}
+
+@layer components {
+  .nros-deck {
+    @apply rounded-lg border border-border/60 bg-card/60 backdrop-blur-md shadow-deck;
+  }
+  .nros-glass {
+    @apply bg-nros-glass backdrop-blur-xl border border-border/60;
+  }
+  .nros-divider {
+    background: linear-gradient(90deg, transparent, hsla(180, 30%, 70%, 0.18), transparent);
+    height: 1px;
+  }
+  .nros-mono { @apply font-mono tracking-tight uppercase text-xs text-muted-foreground; }
+  .nros-eyebrow {
+    @apply font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground;
+  }
+  .nros-scanlines {
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 2px,
+      hsla(178, 92%, 56%, 0.04) 3px,
+      transparent 4px
+    );
+  }
+  .nros-rule-cyber::before {
+    content: "";
+    @apply block h-px w-12 bg-primary mb-2;
+  }
+}

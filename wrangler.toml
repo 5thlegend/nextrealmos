@@ -1,0 +1,14 @@
+name = "nextrealmos"
+compatibility_date = "2025-01-15"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = ".vercel/output/static"
+
+# Bindings (set via Cloudflare dashboard or `wrangler pages secret put`):
+#   NEXT_PUBLIC_SUPABASE_URL          (vars)
+#   NEXT_PUBLIC_SUPABASE_ANON_KEY     (vars)
+#   NEXT_PUBLIC_APP_URL               (vars, e.g. https://nextrealmos.pages.dev)
+#   SUPABASE_SERVICE_ROLE_KEY         (secret)
+#   ANTHROPIC_API_KEY                 (secret)
+#   OPENAI_API_KEY                    (secret)
+#   NROS_AI_DEFAULT_PROVIDER          (vars, optional, default: anthropic)
+#   NROS_AI_DEFAULT_MODEL             (vars, optional, default: claude-opus-4-7)
