@@ -1,0 +1,21 @@
+{
+  "name": "@nros/sdk",
+  "version": "0.1.0",
+  "description": "TypeScript SDK for realms in the NROS federation. Issue/consume API keys, push transmissions, award XP, look up operators.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": ["src"],
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": ["nros", "next-realm", "federation", "sdk"],
+  "license": "UNLICENSED",
+  "engines": { "node": ">=18" },
+  "peerDependencies": {
+    "typescript": ">=5"
+  }
+}

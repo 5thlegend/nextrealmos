@@ -1,215 +1,206 @@
-# NROS · Architecture
+# NROS — Architecture (V2 Federation)
 
-> Tag: **NROS_KERNEL_V1_GENESIS**
+> Tag: **NROS_KERNEL_V2_FEDERATION**
 
-## 1. System architecture
+## 1. System architecture — the federation
 
 ```
-┌──────────────────────────────────────────────────────────────────────────┐
-│                         CLOUDFLARE PAGES                                 │
-│  ┌────────────────────────────────────────────────────────────────────┐  │
-│  │                  Next.js 15 (Edge runtime)                         │  │
-│  │                                                                    │  │
-│  │   ┌─────────────────┐   ┌──────────────────┐   ┌────────────────┐ │  │
-│  │   │  Marketing /    │   │   Dashboard      │   │   Auth Pages   │ │  │
-│  │   │   landing (○)   │   │   (RSC, ƒ)       │   │   (○ static)   │ │  │
-│  │   └─────────────────┘   └────────┬─────────┘   └───────┬────────┘ │  │
-│  │                                  │                     │          │  │
-│  │   ┌─────────────────────────────┴───────────────────┐ │          │  │
-│  │   │           Edge API Routes                       │ │          │  │
-│  │   │  /api/agents/genubra   (stream)                 │ │          │  │
-│  │   │  /api/workflows        (POST → OBLISK)          │ │          │  │
-│  │   │  /auth/sign-out        (route handler)          │ │          │  │
-│  │   └────────────────────────┬────────────────────────┘ │          │  │
-│  │                            │                          │          │  │
-│  │   ┌────────────────────────┴──────────────────────────┴────────┐ │  │
-│  │   │  Middleware (edge) — session refresh + route gating       │ │  │
-│  │   └────────────────────┬──────────────────────────────────────┘ │  │
-│  └─────────────────────────┼─────────────────────────────────────────┘  │
-└────────────────────────────┼────────────────────────────────────────────┘
-                             │
-              ┌──────────────┴───────────────┐
-              ▼                              ▼
-   ┌────────────────────┐         ┌────────────────────────┐
-   │  Supabase          │         │  AI Providers          │
-   │  ────────────      │         │  ────────────          │
-   │  Postgres + RLS    │         │  Anthropic API         │
-   │  Auth (JWT)        │         │  OpenAI API            │
-   │  Realtime channels │         │  (router selectable)   │
-   └────────────────────┘         └────────────────────────┘
+                   ┌──────────────────────────────────────────────────────┐
+                   │              GENUBRA (cognition layer)               │
+                   │  operator graph · memory · orchestration · routing    │
+                   └─────────────────────────┬─────────────────────────────┘
+                                             │  reads operator_profiles,
+                                             │  transmissions, ai_requests
+                                             ▼
+┌───────────────┐   federation API   ┌─────────────────────────────────────┐   transmissions   ┌───────────────┐
+│   Realm 1     │  ◄───────────────► │              NROS CORE              │ ◄───────────────► │   Realm 2     │
+│  (Next.js)    │   /api/federation  │  ─────────────────────────────────  │                   │  (Cloudflare  │
+│  uses @nros/sdk│                    │  identity layer (operator_profiles) │                   │   Worker)     │
+└───────────────┘                    │  realm registry  (realms, op_realms)│                   └───────────────┘
+       ▲                             │  api keys       (realm_api_keys)    │                          ▲
+       │                             │  feed           (transmissions)     │                          │
+       │                             │  XP/ranks       (xp_logs, ranks)    │                          │
+┌───────────────┐                    │  workflows      (workflows, steps)  │                   ┌───────────────┐
+│   Realm 3     │  ◄───────────────► │  AI surface     (genubra panel)     │ ◄───────────────► │  Realm N      │
+│  (native iOS) │                    │  cybernetic operator dashboard      │                   │  (Discord bot)│
+└───────────────┘                    └─────────────────┬───────────────────┘                   └───────────────┘
+                                                       │
+                                                       ▼
+                                       ┌─────────────────────────────────┐
+                                       │   Supabase  (Postgres · Auth ·  │
+                                       │   Realtime · RLS)               │
+                                       └─────────────────────────────────┘
 ```
+
+**Key inversion vs. V1:**
+
+- V1 NROS hosted *every* operator surface (missions, squads, leaderboards).
+- V2 NROS hosts *coordination + identity*. Realms host their own surfaces and
+  optionally federate XP/events back. The `/missions` surface in NROS is now
+  the surface for the **NROS-Core realm** (the founding realm) — other realms
+  bring their own.
 
 ## 2. Data flow
 
-```
-                             ┌──────────────────────────┐
-                             │  Operator (browser)      │
-                             └──────────┬───────────────┘
-                                        │  HTTPS
-                                        ▼
-                       ┌─────────────────────────────────┐
-                       │     CF Pages middleware         │
-                       │   updateSession() → JWT cookie  │
-                       └─────────────┬───────────────────┘
-                                     │
-              ┌──────────────────────┼──────────────────────────┐
-              ▼                      ▼                          ▼
-   ┌────────────────────┐ ┌────────────────────┐    ┌──────────────────────┐
-   │  Server Component  │ │  Server Action     │    │  /api/agents/genubra │
-   │  page.tsx          │ │  acceptMission(),  │    │  (streamed)          │
-   │                    │ │  completeMission() │    │                      │
-   └─────────┬──────────┘ └────────┬───────────┘    └──────────┬───────────┘
-             │                     │                            │
-             ▼                     ▼                            ▼
-   ┌────────────────────┐ ┌────────────────────┐    ┌──────────────────────┐
-   │  services/*        │ │  services/*        │    │  agents/genubra.ts   │
-   │  (RLS-scoped)      │ │  + xp-service      │    │  → ai-router         │
-   └─────────┬──────────┘ └────────┬───────────┘    └──────────┬───────────┘
-             │                     │                            │
-             ▼                     ▼                            ▼
-   ┌────────────────────────────────────────────┐    ┌──────────────────────┐
-   │       Supabase (PostgREST + RLS)           │    │  Anthropic / OpenAI  │
-   │  reads: anon JWT     writes: service-role  │    │  (text stream)       │
-   └────────────────────────────────────────────┘    └──────────┬───────────┘
-                              │                                  │
-                              │ realtime broadcast               │ logged →
-                              ▼                                  ▼
-                   ┌────────────────────┐              ┌──────────────────┐
-                   │  hooks/use-operator│              │  ai_requests     │
-                   │  (live XP/rank)    │              │  (LEGVCY)        │
-                   └────────────────────┘              └──────────────────┘
-```
-
-## 3. Service relationships
+### 2A. Operator action inside a realm
 
 ```
-                ┌────────────────────────┐
-                │  operator-service.ts   │◄─────────┐
-                └────────┬───────────────┘          │
-                         │ getCurrentOperator()     │
-                         ▼                          │
-   ┌────────────────────────────────┐               │
-   │  All page.tsx + API routes     │               │
-   └────────┬───────────────────────┘               │
-            │                                       │
-            │     ┌──────────────────────────┐      │
-            ├────►│  mission-service.ts      ├──────┤
-            │     │  (accept/complete)       │      │
-            │     └────────┬─────────────────┘      │
-            │              │ awardXp()              │
-            │              ▼                        │
-            │     ┌──────────────────────────┐      │
-            │     │  xp-service.ts           │      │
-            │     │  (delta + rank promote)  │      │
-            │     └────────┬─────────────────┘      │
-            │              │ updates                │
-            │              ▼                        │
-            │     ┌──────────────────────────┐      │
-            │     │  operator_profiles       │──────┘
-            │     │  + xp_logs (LEGVCY)      │
-            │     │  + notifications         │
-            │     └──────────────────────────┘
-            │
-            │     ┌──────────────────────────┐
-            ├────►│  workflow-service.ts     │
-            │     │  createWorkflowFrom-     │
-            │     │  Objective()             │
-            │     └────────┬─────────────────┘
-            │              │ obliskDecompose()
-            │              ▼
-            │     ┌──────────────────────────┐
-            │     │  agents/oblisk.ts        │
-            │     │  (zod-validated JSON)    │
-            │     └────────┬─────────────────┘
-            │              │ aiComplete()
-            │              ▼
-            │     ┌──────────────────────────┐
-            │     │  agents/ai-router.ts     │
-            │     │  (provider + telemetry)  │
-            │     └────────┬─────────────────┘
-            │              │
-            │     ┌────────┴─────────┐
-            │     ▼                  ▼
-            │ ┌────────┐       ┌──────────┐
-            │ │Anthrop.│       │ OpenAI   │
-            │ └────────┘       └──────────┘
-            │
-            │     ┌──────────────────────────┐
-            ├────►│  squad-service.ts        │
-            │     └──────────────────────────┘
-            │
-            │     ┌──────────────────────────┐
-            └────►│  leaderboard-service.ts  │
-                  └──────────────────────────┘
+                Operator (browser / native / chat)
+                          │
+                          ▼
+                ┌─────────────────────┐
+                │     Realm app       │ (sovereign — own auth UI, own data)
+                │  uses @nros/sdk     │
+                └──────────┬──────────┘
+                           │  Bearer nros_pk_…
+                           │  POST /api/federation/transmissions
+                           │  POST /api/federation/xp
+                           ▼
+                ┌─────────────────────┐
+                │  NROS edge function │ ── authenticateRealm() → service-role
+                └──────────┬──────────┘
+                           │
+                ┌──────────┴───────────────┐
+                ▼                          ▼
+       ┌─────────────────┐        ┌─────────────────┐
+       │  transmissions  │        │  xp_logs +      │
+       │  (realm_id, …)  │        │  operator_      │
+       │                 │        │  profiles       │
+       └────────┬────────┘        └────────┬────────┘
+                │                          │
+                ▼                          ▼
+         Realtime channel          Rank check + promotion notification
+                │                          │
+                └──────────┬───────────────┘
+                           ▼
+              Operator's NROS dashboard updates live
+              (transmissions feed + rank bar)
 ```
 
-## 4. Layer attribution — what becomes what
+### 2B. Operator interaction inside NROS itself
 
-### NROS core (the operating shell)
-The platform itself. Owns identity, navigation, mechanics, persistence APIs.
-- `src/app/*` — App Router shell, route groups, layouts
-- `src/components/ui/*` and `src/components/nros/*` (except GENUBRA panel)
+Same as V1 GENESIS, plus the new `/realms` and `/transmissions` surfaces.
+Server components → services → Supabase (RLS-scoped). GENUBRA panel streams
+from `/api/agents/genubra` with operator context that now includes
+**realm-membership count + recent transmission count**.
+
+### 2C. Realm registration
+
+```
+Operator (signed in to NROS) → /realms/new → POST /api/federation/realms
+        │
+        ├─► realms.insert(...)            (Postgres)
+        ├─► realm_api_keys.insert(...)    (sha256(key) stored)
+        └─► transmissions.insert(REALM_REGISTERED)
+
+Response includes the FULL key — shown to operator ONCE, never again.
+```
+
+## 3. Service relationships (V2)
+
+```
+       ┌─────────────────────────┐
+       │  operator-service       │
+       └──────────┬──────────────┘
+                  │
+   ┌──────────────┼──────────────────────────────────────────────┐
+   ▼              ▼                                              ▼
+┌─────────┐  ┌──────────┐         ┌────────────────┐    ┌────────────────┐
+│ mission │  │  squad   │         │  realm-service │    │ federation-    │
+│ service │  │ service  │         │                │    │ auth (bearer)  │
+└────┬────┘  └────┬─────┘         └────────┬───────┘    └────────┬───────┘
+     │            │                        │                     │
+     │            │                        ▼                     ▼
+     │            │             ┌────────────────────┐  ┌────────────────┐
+     │            │             │ transmission-      │  │  Federation    │
+     │            │             │ service            │  │  API routes    │
+     │            │             │ (push/list)        │  │  /api/fed/*    │
+     │            │             └────────┬───────────┘  └────────┬───────┘
+     │            │                      │                       │
+     ▼            ▼                      ▼                       ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│                        xp-service.awardXp(realmId?)                    │
+│  • upserts operator_profiles.xp                                        │
+│  • mirrors delta into operator_realms.realm_xp (if realm-attributed)   │
+│  • appends xp_logs (now realm-scoped)                                  │
+│  • emits notification on rank promotion                                │
+└────────────────────────────────────────────────────────────────────────┘
+                                  │
+                                  ▼
+                       ┌────────────────────┐
+                       │  Supabase (RLS)    │
+                       └────────────────────┘
+                                  ▲
+                                  │
+                       ┌──────────┴─────────┐
+                       │  GENUBRA reads     │
+                       │  operator + recent │
+                       │  transmissions for │
+                       │  context briefing  │
+                       └────────────────────┘
+```
+
+## 4. Layer attribution (V2)
+
+### GENUBRA core
+- `src/agents/genubra.ts`, `src/agents/ai-router.ts`, `src/agents/providers/*`
+- `src/components/nros/genubra-panel*.tsx`
+- `/api/agents/genubra`
+- Reads (read-only) from: `operator_profiles`, `transmissions`, `ai_requests`, `xp_logs`
+
+### NROS core (federation/identity/sync)
 - `src/services/operator-service.ts`
-- `src/services/mission-service.ts`
-- `src/services/xp-service.ts`
-- `src/services/squad-service.ts`
-- `src/services/leaderboard-service.ts`
-- `src/lib/supabase/*` and `src/middleware.ts`
-- Tables: `operator_profiles`, `ranks`, `missions`, `mission_progress`, `squads`, `squad_members`, `achievements`
+- `src/services/realm-service.ts`
+- `src/services/federation-auth.ts`
+- `src/services/transmission-service.ts`
+- `src/services/squad-service.ts`, `leaderboard-service.ts` (federation-wide squads & ladder)
+- `src/lib/supabase/*`, `src/middleware.ts`
+- `src/app/api/federation/*` — the wire contract
+- `src/app/(dashboard)/{realms,transmissions,squads,leaderboard,operator}/*`
+- Tables: `operator_profiles`, `realms`, `realm_api_keys`, `operator_realms`, `transmissions`, `squads`, `squad_members`
 
-### GENUBRA core (the intelligence)
-The strategic AI persona and its surface.
-- `src/agents/genubra.ts` — persona spec + system prompt
-- `src/agents/ai-router.ts` — provider routing, streaming, telemetry
-- `src/agents/providers/{anthropic,openai}.ts`
-- `src/components/nros/genubra-panel.tsx` + `genubra-panel-context.tsx`
-- `src/app/api/agents/genubra/route.ts`
-
-### OBLISK core (the manifestation engine)
-The decomposition compiler — objective → executable structure.
-- `src/agents/oblisk.ts` — system prompt + zod plan schema + plan flattener
-- `src/services/workflow-service.ts` — persistence + XP grant on forge
-- `src/app/api/workflows/route.ts`
-- `src/app/(dashboard)/workflows/*` — list, new, detail UIs
+### OBLISK core (manifestation)
+- `src/agents/oblisk.ts`, `src/services/workflow-service.ts`
+- `/api/workflows`, `/workflows/*`
 - Tables: `workflows`, `workflow_steps`
+- *V3 vector:* OBLISK will additionally manifest **realms themselves** —
+  scaffold a new realm from an objective, deploy it, register it.
 
-### LEGVCY layer (the immutable record)
-Append-only history that survives operator/session lifetime. Powers
-analytics, replay, audit, and post-hoc intelligence.
-- `xp_logs` — every XP delta with reason + source
-- `ai_requests` — every GENUBRA / OBLISK call (provider, model, token-deltas, prompt excerpt)
-- `operator_achievements` — unlocks
-- `notifications` — operator-visible system events
+### LEGVCY layer (progression + history)
+- `src/services/xp-service.ts`
+- Tables: `xp_logs`, `ranks`, `achievements`, `operator_achievements`, `notifications`
+- The append-only memory NROS uses to compute rank, fuel GENUBRA context,
+  and feed the operator's own ledger view.
 
-LEGVCY tables are written by services but never mutated/deleted by user
-actions. They are the canonical "what happened" stream.
+### REALMS (external)
+- Live in their own repos.
+- Speak the federation protocol via `@nros/sdk` or raw HTTP.
+- The `nros-core` realm (seeded by migration 0002) is NROS's own first-party
+  surface (missions, squads, leaderboard, operator profile).
 
-## 5. Scalability risks
+## 5. Scalability risks (V2)
 
-| Risk                                                                | Mitigation                                                             |
-| ------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| Edge runtime cold-start on AI calls                                 | Keep system prompts in-bundle (no remote fetch); enable Anthropic prompt caching once token volume justifies it |
-| Synchronous OBLISK call blocks user up to 30-60s                    | Move to background job (Cloudflare Queues / Supabase Edge Function) and stream progress to UI via Realtime once volume grows |
-| `leaderboard_global` view recomputes on every read                  | Materialize with periodic refresh once user count crosses ~10K         |
-| `ai_requests` grows unbounded                                       | Add 90-day retention policy + downsample to daily aggregates           |
-| `xp_logs` per-operator scan in profile page                         | Already indexed; add operator-level aggregate view if profile slow     |
-| Service-role usage in `xp-service` and signup                       | Keep narrow; never expand without an audit trail in `ai_requests`-style |
-| `workflow_steps` parent_id tree depth (currently 2 levels)          | Fine for V1 — add CTE-based materialized hierarchy if depth grows      |
-| Realtime channels per operator (`use-operator`)                     | Pool channels by squad/global once concurrent operators > ~1K          |
+| Risk                                                                    | Mitigation                                                                       |
+| ----------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Transmissions table grows unbounded                                     | Partition by `created_at` quarterly + 90-day hot retention; cold to object store |
+| API-key compromise from a single realm                                  | Per-key `last_used_at` + scope tagging; revoke endpoint; alert on >N failures    |
+| Realm impersonation via callsign collision                              | Callsigns are unique on `operator_profiles` (citext); SDK lookup is exact-match  |
+| Cross-realm XP inflation (rogue realm awards 1M XP)                     | Add per-realm daily XP budget (table: `realm_xp_budgets`); deny on overage        |
+| Realtime fan-out cost on transmissions                                  | Subscribe per-operator (filter by their realm membership), not global             |
+| GENUBRA context bloat as realm count grows                              | Truncate operator_briefing to top-N realms by recent activity                    |
+| Federation API burst from a single realm                                | Per-key token-bucket rate limit (Cloudflare KV)                                  |
 
-## 6. Technical debt risks
+## 6. Technical debt (V2)
 
-| Item                                                                  | Severity | Plan                                                                    |
-| --------------------------------------------------------------------- | -------- | ----------------------------------------------------------------------- |
-| Hand-written `Database` type doesn't satisfy supabase generic schema  | M        | Generate via `supabase gen types typescript --project-id … > src/types/database.ts` and re-add `<Database>` generic on clients |
-| Read-site `as Type` casts compensate for missing generic              | M        | Fixed automatically by above                                            |
-| Sign-up uses service-role for profile insert                          | L        | Acceptable; document in DEPLOYMENT.md and audit before opening signups  |
-| OBLISK plan parent-id resolution uses O(n²) lookup                    | L        | Plans are small (~25 nodes); revisit if plan size > 200                 |
-| No tests                                                              | H        | Add Playwright smoke + Vitest unit tests for `agents/oblisk` JSON parser before opening to public |
-| ESLint not configured beyond Next defaults                            | L        | Add stricter rules + Prettier in CI                                     |
-| No rate limit on `/api/agents/genubra` or `/api/workflows`            | H        | Add per-operator token-bucket on the edge before public launch          |
-| `ai_requests` doesn't capture token counts                            | M        | Wire SDK response usage into telemetry insert                           |
-| No cron / scheduled job runner wired up                               | M        | Add Cloudflare Cron Trigger for daily aggregations + leaderboard snapshots |
-| GENUBRA + OBLISK have no tool-use (model can't act on operator's behalf) | M    | Add tool-use loop in V2 — let GENUBRA accept missions / forge workflows |
+| Item                                                                | Severity | Notes                                                                         |
+| ------------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------- |
+| Realm registration auto-approves (no admin moderation)              | M        | Add admin-review gate before opening federation to public                     |
+| API keys are bearer-only (no signing / replay protection)           | M        | Add HMAC-signed request bodies for high-value calls (xp.award) in V3          |
+| No SSO between realms yet — each realm has its own auth UI today    | H        | V3: NROS issues short-lived JWTs realms can verify against the operator graph |
+| Hand-written `Database` type still not regenerated                  | M        | V1 carry-over                                                                 |
+| No rate limiting on federation endpoints                             | H        | Pre-public must-have                                                          |
+| No tests                                                             | H        | Add Playwright + Vitest before public                                         |
+| Per-realm leaderboard view not yet materialized                     | L        | Easy add when usage warrants                                                  |
+| OBLISK can't yet scaffold a realm (just workflows)                  | L        | V3 vector — OBLISK as realm-manifestation engine                              |
 
-See [ROADMAP.md](./ROADMAP.md) for sequenced fixes.
+See [ROADMAP.md](./ROADMAP.md) for sequenced work.

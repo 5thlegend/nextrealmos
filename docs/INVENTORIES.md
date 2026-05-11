@@ -1,13 +1,14 @@
 # NROS · Inventories
 
-> Tag: **NROS_KERNEL_V1_GENESIS** · Snapshot: 2026-05-10
+> Tag: **NROS_KERNEL_V2_FEDERATION** · Snapshot: 2026-05-10
+> (V1 GENESIS inventory superseded; V2 adds realms, transmissions, federation API, SDK.)
 
 ## 1. Folder tree (source)
 
 ```
 NROS_KERNEL/
 ├── README.md
-├── components.json                # ShadCN config
+├── components.json
 ├── next.config.ts
 ├── package.json
 ├── postcss.config.mjs
@@ -17,15 +18,27 @@ NROS_KERNEL/
 ├── .env.example
 ├── .gitignore
 ├── docs/
-│   ├── SYSTEM_OVERVIEW.md
-│   ├── ARCHITECTURE.md
-│   ├── DATABASE.md
-│   ├── DEPLOYMENT.md
-│   ├── ROADMAP.md
+│   ├── SYSTEM_OVERVIEW.md         # V2 federation overview
+│   ├── ARCHITECTURE.md            # diagrams, services, layer attribution
+│   ├── FEDERATION_PROTOCOL.md     # wire contract for realms (NEW V2)
+│   ├── REALM_SPEC.md              # what makes a thing a realm (NEW V2)
+│   ├── SDK.md                     # @nros/sdk reference (NEW V2)
+│   ├── DATABASE.md                # 17 tables + 4 views + RLS
+│   ├── DEPLOYMENT.md              # Cloudflare Pages + Supabase
+│   ├── DEPLOY_LOG.md              # production deploy record
+│   ├── ROADMAP.md                 # Bands A-D + carry-over from V1
 │   └── INVENTORIES.md             # this file
+├── packages/
+│   └── sdk/                       # @nros/sdk — TypeScript client (NEW V2)
+│       ├── README.md
+│       ├── package.json
+│       ├── tsconfig.json
+│       └── src/index.ts
 ├── supabase/
 │   └── migrations/
-│       └── 0001_kernel_init.sql   # 14 tables + view + RLS + seeds
+│       ├── 0001_kernel_init.sql   # 14 tables + view + RLS + seeds (V1)
+│       └── 0002_federation.sql    # +3 enums, +4 tables, +5 columns, +2 views, RLS, seed core realm (V2)
+├── dist-landing/                  # static landing for nextrealmos.pages.dev (V1 deploy)
 └── src/
     ├── middleware.ts
     ├── agents/                    # GENUBRA + OBLISK + provider router
@@ -151,11 +164,17 @@ NROS_KERNEL/
 
 ## 4. API route inventory
 
-| Method | Path                    | Runtime | Auth   | Body / Params                  | Returns                    | Layer   |
-| ------ | ----------------------- | ------- | ------ | ------------------------------ | -------------------------- | ------- |
-| POST   | `/api/agents/genubra`   | edge    | yes    | `{ question: string }`         | `text/plain` (streamed)    | GENUBRA |
-| POST   | `/api/workflows`        | edge    | yes    | `{ objective: string (≥10c) }` | `{ workflowId }` JSON      | OBLISK  |
-| POST   | `/auth/sign-out`        | edge    | yes    | —                              | 302 → `/`                  | NROS    |
+| Method | Path                                            | Runtime | Auth                  | Returns                              | Layer   |
+| ------ | ----------------------------------------------- | ------- | --------------------- | ------------------------------------ | ------- |
+| POST   | `/api/agents/genubra`                           | edge    | session               | `text/plain` (streamed)              | GENUBRA |
+| POST   | `/api/workflows`                                | edge    | session               | `{ workflowId }`                     | OBLISK  |
+| POST   | `/auth/sign-out`                                | edge    | session               | 302 → `/`                            | NROS    |
+| POST   | `/api/federation/realms`                        | edge    | session (owner)       | `{ realm, api_key }` (key shown ONCE) | NROS    |
+| GET    | `/api/federation/realms`                        | edge    | none (public)         | `{ realms[] }` (ACTIVE only)         | NROS    |
+| POST   | `/api/federation/transmissions`                 | edge    | bearer (WRITE)        | `{ transmission }`                   | NROS    |
+| GET    | `/api/federation/transmissions`                 | edge    | none (public)         | `{ transmissions[] }`                | NROS    |
+| POST   | `/api/federation/xp`                            | edge    | bearer (WRITE)        | `{ new_xp, promoted, new_rank }`     | NROS    |
+| GET    | `/api/federation/operators/[callsign]`          | edge    | bearer (READ)         | `{ operator, realms[] }`             | NROS    |
 
 Server-action endpoints (form-action, not REST):
 
