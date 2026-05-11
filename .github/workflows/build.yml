@@ -1,0 +1,77 @@
+name: Build NROS for Cloudflare Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write   # to push the built artifacts to a separate branch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      # Stub values for build — real values get injected at deploy time on Cloudflare.
+      # next-on-pages reads these at build time but the app only USES them at request time.
+      NEXT_PUBLIC_SUPABASE_URL: https://stub.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: stub-replace-me
+      NEXT_PUBLIC_APP_URL: https://nextrealmos.pages.dev
+      SUPABASE_SERVICE_ROLE_KEY: stub-replace-me
+      ANTHROPIC_API_KEY: stub-replace-me
+      OPENAI_API_KEY: stub-replace-me
+      NROS_AI_DEFAULT_PROVIDER: anthropic
+      NROS_AI_DEFAULT_MODEL: claude-opus-4-7
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps --no-audit --no-fund
+
+      - name: Build for Cloudflare Pages
+        run: npx @cloudflare/next-on-pages@1
+
+      - name: Verify build output
+        run: |
+          test -d .vercel/output/static || (echo "MISSING .vercel/output/static" && exit 1)
+          ls -la .vercel/output/static | head -20
+          echo "--- output size ---"
+          du -sh .vercel/output/static
+
+      - name: Publish built output to `built-output` branch
+        run: |
+          git config user.name  "nros-builder"
+          git config user.email "builder@nextrealm.io"
+
+          # Stage the build output into a fresh orphan branch
+          mkdir -p /tmp/built
+          cp -r .vercel/output/static/. /tmp/built/
+
+          # New orphan, replace contents, commit
+          git checkout --orphan built-output
+          git rm -rf . > /dev/null 2>&1 || true
+          # Restore .git only — clean working dir
+          find . -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
+          cp -r /tmp/built/. ./
+          # Track every file (Pages output may include dotfiles like _routes.json, _worker.js)
+          touch .nojekyll
+          echo "built from $GITHUB_SHA at $(date -u +%Y-%m-%dT%H:%M:%SZ)" > .build-info
+          git add -A
+          git commit -m "build: $GITHUB_SHA" || (echo "no changes to commit" && exit 0)
+          git push origin built-output --force
+
+      - name: Upload build artifact (backup access)
+        uses: actions/upload-artifact@v4
+        with:
+          name: cloudflare-pages-build
+          path: .vercel/output/static
+          retention-days: 7
