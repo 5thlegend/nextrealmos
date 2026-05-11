@@ -5,6 +5,8 @@ import { ensureOperatorProfile } from "@/services/operator-service";
 import { Panel } from "@/components/nros/panel";
 import { Button } from "@/components/ui/button";
 
+export const runtime = "edge";
+
 export default async function OnboardingPage() {
   const supabase = await createSupabaseServer();
   const { data: { user } } = await supabase.auth.getUser();

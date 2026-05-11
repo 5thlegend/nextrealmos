@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+export const runtime = "edge";
+
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <main className="relative min-h-screen grid lg:grid-cols-2">

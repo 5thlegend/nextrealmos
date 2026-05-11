@@ -10,3 +10,8 @@ dist
 *.tsbuildinfo
 next-env.d.ts
 .supabase
+
+# build output
+.vercel/
+.open-next/
+dist-landing/

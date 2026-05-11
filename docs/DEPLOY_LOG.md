@@ -1,0 +1,79 @@
+# Deploy Log
+
+## 2026-05-10 — V1 GENESIS landing live
+
+**Live URL:** <https://nextrealmos.pages.dev>
+**This deploy:** <https://ad4ae7d2.nextrealmos.pages.dev>
+**Project:** Cloudflare Pages · `nextrealmos`
+**Account:** `dankpenta@gmail.com` (`869002bb49acbb6b6e30d499b587c929`)
+**Commit:** `99745a2` (tag `NROS_KERNEL_V1_GENESIS`)
+**Deployed surface:** Static landing only (single `dist-landing/index.html`).
+
+### What's live now
+
+The cybernetic landing page (hero + 4 pillar cards + status panel + footer).
+Every link is informational — no auth, no dashboard, no AI panel yet. The
+landing honestly states: *"Operator activation comes online once Supabase
+wires through."*
+
+### What is NOT live yet
+
+The full SSR Next.js kernel (auth, dashboard, missions, squads, leaderboard,
+GENUBRA panel, OBLISK engine). The build pipeline is blocked on Windows by
+two compounding issues:
+
+1. **`spawn npx ENOENT`** — `@cloudflare/next-on-pages` spawns `npx` from
+   a child process, and Node on Windows doesn't auto-resolve the `.cmd`
+   extension when invoked from inside another node process.
+2. **`EPERM symlink`** — when run via PowerShell, `vercel build` (which
+   `next-on-pages` invokes internally) creates symlinks between deduplicated
+   serverless functions. Symlink creation requires Developer Mode or
+   admin on Windows.
+
+The kernel **does** build cleanly with plain `next build` (already verified
+this session — see commit log). Only the Vercel-output → CF-Pages-output
+conversion fails on Windows.
+
+### Path to full SSR deploy (any of these)
+
+| Option                  | Effort | Notes                                                                 |
+|-------------------------|--------|-----------------------------------------------------------------------|
+| **GitHub → CF Pages CI**| S      | Push the repo to GitHub, connect it in CF dashboard. Linux build runner — none of the Windows issues hit. *Recommended.* |
+| **Run from WSL**        | M      | `wsl --install`, then build + deploy from inside Ubuntu               |
+| **Run on a Linux VM / cloud shell** | M | `gh codespaces` or any Linux box; build + `wrangler pages deploy`     |
+| **Switch adapter**      | M      | Try `@opennextjs/cloudflare` (newer, but Windows still untested)      |
+| **Enable Windows Developer Mode** | S | Settings → For developers → Developer Mode On. Then `vercel build` symlinks succeed. |
+
+### To finish the deploy (recommended path)
+
+```bash
+# 1. Create a GitHub repo (manually via web, or with gh CLI later)
+git -C NROS_KERNEL remote add origin git@github.com:<you>/nros-kernel.git
+git -C NROS_KERNEL push -u origin main
+git -C NROS_KERNEL push origin NROS_KERNEL_V1_GENESIS
+
+# 2. In Cloudflare dashboard → Pages → nextrealmos → Settings → Builds & deployments
+#    Connect to Git → select the GitHub repo
+#    Build command:        npx @cloudflare/next-on-pages
+#    Build output dir:     .vercel/output/static
+#    Root directory:       /
+#    Environment variables: see docs/DEPLOYMENT.md §2
+#    Functions compatibility flag: nodejs_compat (Settings → Functions)
+
+# 3. Wire Supabase
+#    Create project at supabase.com
+#    Run supabase/migrations/0001_kernel_init.sql in SQL editor
+#    Set the 5 secrets in CF Pages env (anon, service-role, app URL, ANTHROPIC, OPENAI)
+#    Trigger redeploy (push any commit, or click "Retry deployment")
+```
+
+### Commands used in this deploy
+
+```bash
+# Create the project
+./node_modules/.bin/wrangler pages project create nextrealmos --production-branch main
+
+# Deploy the landing
+./node_modules/.bin/wrangler pages deploy dist-landing \
+  --project-name=nextrealmos --branch=main --commit-dirty=true
+```

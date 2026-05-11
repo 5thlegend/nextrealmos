@@ -5,6 +5,8 @@ import { GenubraPanel } from "@/components/nros/genubra-panel";
 import { GenubraPanelProvider } from "@/components/nros/genubra-panel-context";
 import { getCurrentOperator } from "@/services/operator-service";
 
+export const runtime = "edge";
+
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const op = await getCurrentOperator();
   if (!op) redirect("/operator/onboarding");
