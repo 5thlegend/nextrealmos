@@ -6,15 +6,14 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write   # to push the built artifacts to a separate branch
+  contents: write   # to push the built artifacts and the build log to separate branches
 
 jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
-      # Stub values for build — real values get injected at deploy time on Cloudflare.
-      # next-on-pages reads these at build time but the app only USES them at request time.
+      # Stub values for build — real values get injected at request time on Cloudflare.
       NEXT_PUBLIC_SUPABASE_URL: https://stub.supabase.co
       NEXT_PUBLIC_SUPABASE_ANON_KEY: stub-replace-me
       NEXT_PUBLIC_APP_URL: https://nextrealmos.pages.dev
@@ -27,6 +26,8 @@ jobs:
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # need history for orphan branch push
 
       - name: Use Node.js 22
         uses: actions/setup-node@v4
@@ -35,41 +36,86 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm install --legacy-peer-deps --no-audit --no-fund
+        id: install
+        run: npm install --legacy-peer-deps --no-audit --no-fund 2>&1 | tee /tmp/install.log
 
       - name: Build for Cloudflare Pages
-        run: npx @cloudflare/next-on-pages@1
-
-      - name: Verify build output
+        id: build
+        continue-on-error: true
         run: |
-          test -d .vercel/output/static || (echo "MISSING .vercel/output/static" && exit 1)
-          ls -la .vercel/output/static | head -20
-          echo "--- output size ---"
-          du -sh .vercel/output/static
+          set +e
+          npx @cloudflare/next-on-pages@1 2>&1 | tee /tmp/build.log
+          echo "build_exit=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
+          true
 
-      - name: Publish built output to `built-output` branch
+      - name: Snapshot output dir
+        if: always()
         run: |
+          {
+            echo "=== build_exit=${{ steps.build.outputs.build_exit }} ==="
+            echo "=== node version ==="; node --version
+            echo "=== top-level files ==="
+            ls -la
+            echo "=== .vercel/output (if exists) ==="
+            ls -la .vercel/output 2>&1 || echo "not present"
+            echo "=== .vercel/output/static (if exists) ==="
+            ls -la .vercel/output/static 2>&1 | head -50 || echo "not present"
+            echo "=== .next (if exists) ==="
+            ls -la .next 2>&1 | head -30 || echo "not present"
+          } > /tmp/snapshot.log 2>&1
+
+      - name: Publish diagnostics to `build-log` branch (always)
+        if: always()
+        run: |
+          set -e
           git config user.name  "nros-builder"
           git config user.email "builder@nextrealm.io"
 
-          # Stage the build output into a fresh orphan branch
+          # collect all diagnostics into a flat dir
+          mkdir -p /tmp/diag
+          cp /tmp/install.log  /tmp/diag/install.log  2>/dev/null || true
+          cp /tmp/build.log    /tmp/diag/build.log    2>/dev/null || true
+          cp /tmp/snapshot.log /tmp/diag/snapshot.log 2>/dev/null || true
+          echo "run=${{ github.run_id }}"        >  /tmp/diag/_meta
+          echo "sha=${{ github.sha }}"           >> /tmp/diag/_meta
+          echo "exit=${{ steps.build.outputs.build_exit }}" >> /tmp/diag/_meta
+          echo "ts=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> /tmp/diag/_meta
+
+          # orphan + force-push
+          git checkout --orphan build-log
+          find . -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
+          cp -r /tmp/diag/. ./
+          git add -A
+          git commit -m "build-log run=${{ github.run_id }} sha=${{ github.sha }} exit=${{ steps.build.outputs.build_exit }}"
+          git push origin build-log --force
+
+      - name: Fail the job if build failed
+        if: always() && steps.build.outputs.build_exit != '0'
+        run: |
+          echo "Build failed with exit ${{ steps.build.outputs.build_exit }} — see build-log branch for full output."
+          exit 1
+
+      - name: Publish built output to `built-output` branch
+        if: steps.build.outputs.build_exit == '0'
+        run: |
+          set -e
+          git fetch origin
+          git checkout main -- .  || true
+
           mkdir -p /tmp/built
           cp -r .vercel/output/static/. /tmp/built/
 
-          # New orphan, replace contents, commit
           git checkout --orphan built-output
-          git rm -rf . > /dev/null 2>&1 || true
-          # Restore .git only — clean working dir
           find . -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
           cp -r /tmp/built/. ./
-          # Track every file (Pages output may include dotfiles like _routes.json, _worker.js)
           touch .nojekyll
-          echo "built from $GITHUB_SHA at $(date -u +%Y-%m-%dT%H:%M:%SZ)" > .build-info
+          echo "built sha=${{ github.sha }} ts=$(date -u +%Y-%m-%dT%H:%M:%SZ)" > .build-info
           git add -A
-          git commit -m "build: $GITHUB_SHA" || (echo "no changes to commit" && exit 0)
+          git commit -m "build: ${{ github.sha }}"
           git push origin built-output --force
 
       - name: Upload build artifact (backup access)
+        if: steps.build.outputs.build_exit == '0'
         uses: actions/upload-artifact@v4
         with:
           name: cloudflare-pages-build
