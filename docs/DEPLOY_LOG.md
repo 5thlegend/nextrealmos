@@ -77,3 +77,27 @@ git -C NROS_KERNEL push origin NROS_KERNEL_V1_GENESIS
 ./node_modules/.bin/wrangler pages deploy dist-landing \
   --project-name=nextrealmos --branch=main --commit-dirty=true
 ```
+
+## 2026-05-10 21:09 — V2 federation landing deployed
+
+**Live URL:** <https://nextrealmos.pages.dev>
+**This deploy:** <https://07fc7365.nextrealmos.pages.dev>
+**Verified:** HTTP 200 · 12,351 bytes
+**Commit:** `c42c03f` (tag `NROS_KERNEL_V2_FEDERATION`)
+
+### What's live
+Updated landing reflecting the V2 federation pivot: five-layer model
+(GENUBRA · NROS · OBLISK · LEGVCY · REALMS), what-the-federation-provides
+panel, `@nros/sdk` integration snippet, V2 stat block.
+
+### What is still NOT live
+The full SSR federation app (`/realms`, `/realms/new`, `/realms/[slug]`,
+`/transmissions`, `/dashboard`, the federation API, the GENUBRA panel).
+Same Windows blocker as V1: `vercel build` reaches the function-symlink
+phase and either fails with `EPERM` or hangs indefinitely (this attempt
+hung for 24 min with zero output, then was force-killed).
+
+The path to full SSR deploy is unchanged from V1 GENESIS:
+1. **(Recommended)** Push to GitHub → connect Cloudflare Pages → build runs on Linux
+2. Enable Windows Developer Mode (Settings → For developers → Developer Mode → On) → re-run `vercel build`
+3. Build from WSL (`wsl --install`) → deploy from there
