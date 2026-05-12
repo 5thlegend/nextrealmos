@@ -13,15 +13,20 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
-      # Stub values for build — real values get injected at request time on Cloudflare.
-      NEXT_PUBLIC_SUPABASE_URL: https://stub.supabase.co
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: stub-replace-me
+      # NEXT_PUBLIC_* values are inlined into client bundles at build time and are
+      # public-by-design (the anon key is intended to be exposed to browsers).
+      # Real Supabase project: pwmmoqoayhjonwhombbz
+      NEXT_PUBLIC_SUPABASE_URL: https://pwmmoqoayhjonwhombbz.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3bW1vcW9heWhqb253aG9tYmJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NDgzMzksImV4cCI6MjA5NDEyNDMzOX0.qWtlUNAYTOLe0DphULt3ZZqfibdySWsBNLoCEVNSqe4
       NEXT_PUBLIC_APP_URL: https://nextrealmos.pages.dev
+
+      # Server-only — stub values OK for build (only accessed at request time on CF).
+      # Real values are PATCHed onto the CF Pages project's runtime env vars.
       SUPABASE_SERVICE_ROLE_KEY: stub-replace-me
       ANTHROPIC_API_KEY: stub-replace-me
       OPENAI_API_KEY: stub-replace-me
-      NROS_AI_DEFAULT_PROVIDER: anthropic
-      NROS_AI_DEFAULT_MODEL: claude-opus-4-7
+      NROS_AI_DEFAULT_PROVIDER: cloudflare
+      NROS_AI_DEFAULT_MODEL: "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
 
     steps:
       - name: Checkout source
