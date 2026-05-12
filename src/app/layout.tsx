@@ -7,8 +7,8 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "sw
 const jet = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "NROS — Next Realm Operating System",
-  description: "Operator coordination platform. Missions, ranks, AI strategy, workflow engine.",
+  title: "NROS · Federation Kernel for the Next Realm Civilization",
+  description: "Federation infrastructure for sovereign operator realms. Universal identity · shared XP · transmissions feed · governance APIs. Not a website — the wiring underneath.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
 };
 
