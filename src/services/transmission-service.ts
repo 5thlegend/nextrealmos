@@ -5,6 +5,8 @@ export async function pushTransmission(input: {
   realmId: string;
   operatorId?: string | null;
   kind: TransmissionKind;
+  /** Optional dotted civilization event name (e.g. 'deployment.launch'). */
+  eventName?: string | null;
   title: string;
   body?: string | null;
   metadata?: Record<string, unknown>;
@@ -17,6 +19,7 @@ export async function pushTransmission(input: {
       realm_id: input.realmId,
       operator_id: input.operatorId ?? null,
       kind: input.kind,
+      event_name: input.eventName ?? null,
       title: input.title,
       body: input.body ?? null,
       metadata: input.metadata ?? {},

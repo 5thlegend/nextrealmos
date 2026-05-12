@@ -13,9 +13,12 @@ const PushBody = z.object({
     "OPERATOR_JOINED", "XP_AWARDED", "RANK_CHANGED", "ACHIEVEMENT_UNLOCKED",
     "MISSION_COMPLETED", "WORKFLOW_FORGED", "REALM_REGISTERED", "SYSTEM", "CUSTOM",
   ]),
+  /** Optional dotted-namespace civilization event name (e.g. 'deployment.launch'). */
+  event_name: z.string().max(120).regex(/^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)*$/, "event_name must be lowercase dotted (e.g. deployment.launch)").optional(),
   title: z.string().min(2).max(140),
   body: z.string().max(2000).optional(),
   operator_id: z.string().uuid().optional(),
+  callsign: z.string().optional(),
   metadata: z.record(z.any()).optional(),
   occurred_at: z.string().datetime().optional(),
 });
@@ -46,10 +49,20 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: parsed.error.errors[0]?.message }, { status: 400 });
   }
 
+  // Resolve callsign → operator_id if needed
+  let operatorId = parsed.data.operator_id ?? null;
+  if (!operatorId && parsed.data.callsign) {
+    const { createSupabaseAdmin } = await import("@/lib/supabase/server");
+    const admin = createSupabaseAdmin();
+    const { data: op } = await admin.from("operator_profiles").select("id").ilike("callsign", parsed.data.callsign).maybeSingle();
+    operatorId = op?.id ?? null;
+  }
+
   const tx = await pushTransmission({
     realmId: auth.realm.id,
-    operatorId: parsed.data.operator_id ?? null,
+    operatorId,
     kind: parsed.data.kind,
+    eventName: parsed.data.event_name ?? null,
     title: parsed.data.title,
     body: parsed.data.body ?? null,
     metadata: parsed.data.metadata ?? {},
