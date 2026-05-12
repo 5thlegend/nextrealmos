@@ -12,6 +12,7 @@ const SignUpSchema = z.object({
     .min(3, "Callsign must be 3-24 characters.")
     .max(24)
     .regex(/^[A-Za-z0-9_.-]+$/, "Callsign: letters, numbers, _ . - only."),
+  next: z.string().optional(),
 });
 
 export type SignUpState = { error?: string };
@@ -21,6 +22,7 @@ export async function signUpAction(_prev: SignUpState, formData: FormData): Prom
     email: formData.get("email"),
     password: formData.get("password"),
     callsign: formData.get("callsign"),
+    next: formData.get("next") ?? undefined,
   });
   if (!parsed.success) return { error: parsed.error.errors[0]?.message ?? "Invalid form." };
 
@@ -48,5 +50,8 @@ export async function signUpAction(_prev: SignUpState, formData: FormData): Prom
   }
 
   revalidatePath("/", "layout");
-  redirect("/operator/onboarding");
+  // After sign-up, propagate `next` through onboarding so the operator lands
+  // where they came from after finishing setup.
+  const nxt = parsed.data.next && parsed.data.next.startsWith("/") ? parsed.data.next : null;
+  redirect(nxt ? `/operator/onboarding?next=${encodeURIComponent(nxt)}` : "/operator/onboarding");
 }

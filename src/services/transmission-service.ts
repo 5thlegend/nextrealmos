@@ -34,7 +34,7 @@ export async function pushTransmission(input: {
   return data as Transmission;
 }
 
-export async function listTransmissions(opts: { limit?: number; realmId?: string; operatorId?: string } = {}) {
+export async function listTransmissions(opts: { limit?: number; realmId?: string; operatorId?: string; eventName?: string } = {}) {
   const supabase = await createSupabaseServer();
   let q = supabase
     .from("transmissions")
@@ -43,6 +43,7 @@ export async function listTransmissions(opts: { limit?: number; realmId?: string
     .limit(opts.limit ?? 100);
   if (opts.realmId)    q = q.eq("realm_id", opts.realmId);
   if (opts.operatorId) q = q.eq("operator_id", opts.operatorId);
+  if (opts.eventName)  q = q.eq("event_name", opts.eventName);
   const { data } = await q;
   return data ?? [];
 }

@@ -24,7 +24,7 @@ function SignInForm() {
     <form action={action} className="w-full max-w-sm space-y-6">
       <header className="space-y-1">
         <p className="nros-eyebrow">// access · session</p>
-        <h2 className="text-2xl font-semibold tracking-tight">Resume Operator Session</h2>
+        <h2 className="text-2xl font-semibold tracking-tight">Operator sign-in</h2>
         <p className="text-sm text-muted-foreground">Authenticate against the kernel.</p>
       </header>
 
@@ -48,7 +48,12 @@ function SignInForm() {
 
       <p className="text-xs text-muted-foreground text-center">
         No identity yet?{" "}
-        <Link href="/sign-up" className="text-primary hover:underline">Activate operator</Link>.
+        <Link
+          href={`/sign-up${search.get("next") ? `?next=${encodeURIComponent(search.get("next")!)}` : ""}`}
+          className="text-primary hover:underline"
+        >
+          Enlist
+        </Link>.
       </p>
     </form>
   );

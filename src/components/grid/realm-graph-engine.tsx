@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import {
   ReactFlow,
   Background,
@@ -15,11 +15,12 @@ import {
   type NodeTypes,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import { createBrowserClient } from "@supabase/ssr";
 
 import { RealmNode, type RealmNodeData } from "./realm-node";
 import type { RealmGraphNode, EliteLeaderRow, AgentRow, CivilizationOverview } from "@/services/civilization-service";
 import { Badge } from "@/components/ui/badge";
-import { Globe, Archive, Shield, Activity, Users, Zap, Brain, Workflow, X } from "lucide-react";
+import { Activity, Shield, Users, Zap, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const nodeTypes: NodeTypes = {
@@ -42,19 +43,73 @@ export function RealmGraphEngine({
   // Lay out realms in a hex-ish ring around the core.
   const initial = useMemo(() => buildGraph(realms, wonderCounts ?? {}), [realms, wonderCounts]);
 
-  const [nodes, , onNodesChange] = useNodesState<Node<RealmNodeData>>(initial.nodes);
-  const [edges, , onEdgesChange] = useEdgesState<Edge>(initial.edges);
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node<RealmNodeData>>(initial.nodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(initial.edges);
   const [selected, setSelected] = useState<RealmNodeData | null>(null);
+  const [pulses, setPulses] = useState<Record<string, number>>({});
 
-  const onNodeClick = useCallback((_e: any, node: Node) => {
+  const onNodeClick = useCallback((_e: unknown, node: Node) => {
     if (node.type === "realm") setSelected(node.data as RealmNodeData);
   }, []);
+
+  // Realtime: when a transmission lands, pulse the originating realm's edge
+  // and bump its 24h counter on the node card. Auto-fades after 2.5s.
+  useEffect(() => {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!url || !key) return;
+
+    const supabase = createBrowserClient(url, key);
+    const channel = supabase
+      .channel("nros-grid-pulses")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "transmissions" },
+        (payload) => {
+          const row = payload.new as { realm_id?: string };
+          const rid = row.realm_id;
+          if (!rid) return;
+          setPulses((p) => ({ ...p, [rid]: (p[rid] ?? 0) + 1 }));
+          setNodes((ns) => ns.map((n) =>
+            n.id === rid
+              ? { ...n, data: { ...n.data, transmissions_24h: (n.data.transmissions_24h ?? 0) + 1 } }
+              : n,
+          ));
+          setTimeout(() => {
+            setPulses((p) => {
+              const { [rid]: _, ...rest } = p;
+              return rest;
+            });
+          }, 2500);
+        },
+      )
+      .subscribe();
+
+    return () => { void supabase.removeChannel(channel); };
+  }, [setNodes]);
+
+  // Apply pulse styling to edges in real-time
+  const styledEdges = useMemo(() => edges.map((e) => {
+    const targetId = e.target;
+    const isPulsing = pulses[targetId] !== undefined;
+    if (!isPulsing) return e;
+    return {
+      ...e,
+      animated: true,
+      style: {
+        ...(e.style ?? {}),
+        stroke: "hsl(178, 92%, 56%)",
+        strokeWidth: 2.5,
+        filter: "drop-shadow(0 0 6px hsl(178, 92%, 56%))",
+      },
+    };
+  }), [edges, pulses]);
 
   return (
     <div className="relative h-[calc(100vh-7rem)] w-full nros-deck overflow-hidden">
       <ReactFlow
         nodes={nodes}
-        edges={edges}
+        edges={styledEdges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onNodeClick={onNodeClick}

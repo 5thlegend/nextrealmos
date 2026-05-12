@@ -19,6 +19,7 @@ jobs:
       NEXT_PUBLIC_SUPABASE_URL: https://pwmmoqoayhjonwhombbz.supabase.co
       NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3bW1vcW9heWhqb253aG9tYmJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NDgzMzksImV4cCI6MjA5NDEyNDMzOX0.qWtlUNAYTOLe0DphULt3ZZqfibdySWsBNLoCEVNSqe4
       NEXT_PUBLIC_APP_URL: https://nextrealmos.pages.dev
+      NEXT_PUBLIC_BUILD_SHA: ${{ github.sha }}
 
       # Server-only — stub values OK for build (only accessed at request time on CF).
       # Real values are PATCHed onto the CF Pages project's runtime env vars.
