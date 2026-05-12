@@ -47,10 +47,11 @@ export function GenubraPanel() {
           return next;
         });
       }
-    } catch (e: any) {
+    } catch (e) {
       setMessages((m) => {
         const next = [...m];
-        next[next.length - 1] = { role: "genubra", content: `// transmission failed: ${e?.message ?? "unknown"}` };
+        const msg = e instanceof Error ? e.message : "unknown";
+        next[next.length - 1] = { role: "genubra", content: `// transmission failed: ${msg}` };
         return next;
       });
     } finally {

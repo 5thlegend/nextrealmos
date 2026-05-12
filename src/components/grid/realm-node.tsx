@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { Handle, Position } from "@xyflow/react";
 import { Globe, Archive, Shield, Users, Zap, Landmark } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -10,6 +11,7 @@ export type RealmNodeData = {
   name: string;
   status: string;
   vaulted_at: string | null;
+  base_url?: string | null;
   operator_count: number;
   elite_count: number;
   agent_count: number;
@@ -83,7 +85,7 @@ export function RealmNode({ data, selected }: { data: RealmNodeData; selected?: 
   );
 }
 
-function Stat({ icon: Icon, n, label }: { icon: any; n: number; label: string }) {
+function Stat({ icon: Icon, n, label }: { icon: React.ComponentType<{ className?: string }>; n: number; label: string }) {
   return (
     <div className="flex flex-col items-center justify-center py-1 rounded bg-background/40 border border-border/40">
       <Icon className="h-2.5 w-2.5 text-muted-foreground" />

@@ -17,6 +17,8 @@ export interface Realm {
   created_at: string;
   approved_at: string | null;
   archived_at: string | null;
+  vaulted_at?: string | null;
+  vault_reason?: string | null;
 }
 
 export type ApiKeyScope = "READ" | "WRITE" | "ADMIN";
@@ -52,7 +54,13 @@ export type TransmissionKind =
   | "WORKFLOW_FORGED"
   | "REALM_REGISTERED"
   | "SYSTEM"
-  | "CUSTOM";
+  | "CUSTOM"
+  // V3.1 extensions (DIVINE-SYNC civilization event taxonomy)
+  | "GUILD_FORMED"
+  | "INFLUENCE_GROWTH"
+  | "ECONOMY_TX"
+  | "AGENT_DEPLOYED"
+  | "REALM_VAULTED";
 
 export interface Transmission {
   id: UUID;

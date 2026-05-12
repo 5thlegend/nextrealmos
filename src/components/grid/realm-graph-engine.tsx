@@ -24,7 +24,9 @@ import { Activity, Shield, Users, Zap, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const nodeTypes: NodeTypes = {
-  realm: RealmNode as any,
+  // @xyflow/react types are awkward with custom node payloads; cast through
+  // unknown rather than any so we keep ESLint quiet without losing safety.
+  realm: RealmNode as unknown as NodeTypes["realm"],
 };
 
 export function RealmGraphEngine({
@@ -331,8 +333,8 @@ function RealmDetailPanel({
           </div>
         )}
 
-        {!realm.vaulted_at && (realm as any).base_url && (
-          <a href={(realm as any).base_url} target="_blank" rel="noreferrer"
+        {!realm.vaulted_at && realm.base_url && (
+          <a href={realm.base_url} target="_blank" rel="noreferrer"
              className="block text-center mt-4 px-3 py-2 rounded border border-border bg-secondary/40 hover:bg-secondary text-xs font-mono">
             ↗ open {realm.slug}
           </a>
@@ -342,7 +344,7 @@ function RealmDetailPanel({
   );
 }
 
-function DetailStat({ icon: Icon, label, v }: { icon: any; label: string; v: number }) {
+function DetailStat({ icon: Icon, label, v }: { icon: React.ComponentType<{ className?: string }>; label: string; v: number }) {
   return (
     <div className="nros-deck p-2 flex items-center gap-2">
       <Icon className="h-3.5 w-3.5 text-muted-foreground" />

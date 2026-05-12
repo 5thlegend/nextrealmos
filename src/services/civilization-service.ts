@@ -69,13 +69,19 @@ export async function listEliteLeaders(): Promise<EliteLeaderRow[]> {
     .from("elite_leaders")
     .select("id, operator_id, realm_id, role, appointed_at, operator_profiles(callsign), realms(slug)")
     .order("appointed_at", { ascending: false });
-  return (data ?? []).map((row: any) => ({
+  type LeaderJoin = {
+    id: string; operator_id: string; realm_id: string | null;
+    role: EliteLeaderRow["role"]; appointed_at: string;
+    operator_profiles: { callsign?: string } | null;
+    realms: { slug?: string } | null;
+  };
+  return ((data ?? []) as LeaderJoin[]).map((row) => ({
     id: row.id,
     operator_id: row.operator_id,
     realm_id: row.realm_id,
     role: row.role,
     appointed_at: row.appointed_at,
-    operator_callsign: row.operator_profiles?.callsign ?? undefined,
+    operator_callsign: row.operator_profiles?.callsign,
     realm_slug: row.realms?.slug ?? null,
   }));
 }
@@ -87,7 +93,12 @@ export async function listAgents(): Promise<AgentRow[]> {
     .select("id, realm_id, kind, name, status, realms(slug)")
     .order("created_at", { ascending: false })
     .limit(100);
-  return (data ?? []).map((row: any) => ({
+  type AgentJoin = {
+    id: string; realm_id: string | null;
+    kind: AgentRow["kind"]; name: string; status: AgentRow["status"];
+    realms: { slug?: string } | null;
+  };
+  return ((data ?? []) as AgentJoin[]).map((row) => ({
     id: row.id,
     realm_id: row.realm_id,
     kind: row.kind,

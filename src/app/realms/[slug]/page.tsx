@@ -9,6 +9,7 @@ import { GalaxyTicker } from "@/components/nros/galaxy-ticker";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { listTransmissions } from "@/services/transmission-service";
 import { listWonders } from "@/services/wonder-service";
+import { getRealmLeaderboard } from "@/services/leaderboard-service";
 
 export const runtime = "edge";
 export const revalidate = 30;
@@ -38,10 +39,11 @@ export default async function PublicRealmPage({ params }: { params: Promise<{ sl
   if (!realm) notFound();
   const r = realm as RealmRow;
 
-  const [{ count: operatorCount }, transmissions, allWonders] = await Promise.all([
+  const [{ count: operatorCount }, transmissions, allWonders, leaderboard] = await Promise.all([
     supabase.from("operator_realms").select("operator_id", { count: "exact", head: true }).eq("realm_id", r.id),
     listTransmissions({ limit: 20, realmId: r.id }),
     listWonders(),
+    getRealmLeaderboard(r.id, 12),
   ]);
 
   const wonders = allWonders.filter((w) => w.realm_id === r.id);
@@ -116,6 +118,28 @@ export default async function PublicRealmPage({ params }: { params: Promise<{ sl
                 </li>
               ))}
             </ul>
+          </Panel>
+        )}
+
+        {leaderboard.length > 0 && (
+          <Panel eyebrow={`// realm ladder · ${leaderboard.length}`} title="Top operators in this realm">
+            <ol className="divide-y divide-border/40">
+              {leaderboard.map((row, i) => (
+                <li key={row.operator_id} className="flex items-center justify-between py-2">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="font-mono text-xs text-muted-foreground w-6 shrink-0">#{i + 1}</span>
+                    <Link
+                      href={`/operator/${encodeURIComponent(row.callsign)}`}
+                      className="font-medium hover:text-primary truncate"
+                    >
+                      {row.callsign}
+                    </Link>
+                    {row.global_rank && <Badge variant="muted">{row.global_rank}</Badge>}
+                  </div>
+                  <span className="font-mono text-xs tabular-nums">{row.realm_xp.toLocaleString()} XP</span>
+                </li>
+              ))}
+            </ol>
           </Panel>
         )}
 
