@@ -1,6 +1,7 @@
 import { env } from "@/lib/env";
 import { anthropicComplete, anthropicStream } from "./providers/anthropic";
 import { openaiComplete, openaiStream } from "./providers/openai";
+import { cloudflareComplete, cloudflareStream, CF_DEFAULT_MODEL } from "./providers/cloudflare";
 import type { AiProvider, AiSurface } from "@/types/nros";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 
@@ -17,6 +18,7 @@ export type AiCall = {
 const DEFAULT_MODELS: Record<AiProvider, string> = {
   anthropic: "claude-opus-4-7",
   openai: "gpt-4o-mini",
+  cloudflare: CF_DEFAULT_MODEL,
 };
 
 function resolve(call: AiCall) {
@@ -44,14 +46,24 @@ export async function aiComplete(call: AiCall): Promise<string> {
   const { provider, model } = resolve(call);
   void logAiRequest(call, provider, model);
   const opts = { model, system: call.system, user: call.user, maxTokens: call.maxTokens };
-  return provider === "anthropic" ? anthropicComplete(opts) : openaiComplete(opts);
+  switch (provider) {
+    case "cloudflare": return cloudflareComplete(opts);
+    case "openai":     return openaiComplete(opts);
+    case "anthropic":
+    default:           return anthropicComplete(opts);
+  }
 }
 
 export function aiStream(call: AiCall): AsyncIterable<string> {
   const { provider, model } = resolve(call);
   void logAiRequest(call, provider, model);
   const opts = { model, system: call.system, user: call.user, maxTokens: call.maxTokens };
-  return provider === "anthropic" ? anthropicStream(opts) : openaiStream(opts);
+  switch (provider) {
+    case "cloudflare": return cloudflareStream(opts);
+    case "openai":     return openaiStream(opts);
+    case "anthropic":
+    default:           return anthropicStream(opts);
+  }
 }
 
 export function streamToResponse(stream: AsyncIterable<string>): Response {

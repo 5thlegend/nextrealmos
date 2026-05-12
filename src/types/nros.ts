@@ -125,7 +125,7 @@ export interface WorkflowStep {
   estimated_hours: number | null;
 }
 
-export type AiProvider = "anthropic" | "openai";
+export type AiProvider = "anthropic" | "openai" | "cloudflare";
 export type AiSurface = "GENUBRA" | "OBLISK" | "MISSION_GEN" | "AD_HOC";
 
 export interface AiRequest {

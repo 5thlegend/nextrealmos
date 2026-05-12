@@ -22,7 +22,8 @@ export const env = {
     return required("OPENAI_API_KEY", process.env.OPENAI_API_KEY);
   },
 
-  // ai defaults
-  AI_DEFAULT_PROVIDER: (process.env.NROS_AI_DEFAULT_PROVIDER ?? "anthropic") as "anthropic" | "openai",
-  AI_DEFAULT_MODEL: process.env.NROS_AI_DEFAULT_MODEL ?? "claude-opus-4-7",
+  // ai defaults — `cloudflare` is the FREE-TIER provider (uses env.AI binding,
+  // no HTTP key needed). Swap to `anthropic` for production once you have a key.
+  AI_DEFAULT_PROVIDER: (process.env.NROS_AI_DEFAULT_PROVIDER ?? "cloudflare") as "anthropic" | "openai" | "cloudflare",
+  AI_DEFAULT_MODEL: process.env.NROS_AI_DEFAULT_MODEL ?? "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
 };
