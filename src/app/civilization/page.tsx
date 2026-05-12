@@ -6,6 +6,7 @@ import { Panel } from "@/components/nros/panel";
 import { Stat } from "@/components/nros/stat";
 import { WondersStrip } from "@/components/nros/wonders-strip";
 import { GalaxyTicker } from "@/components/nros/galaxy-ticker";
+import { OperatorSearch } from "@/components/nros/operator-search";
 import { listPublicRealms } from "@/services/realm-service";
 import { listTransmissions } from "@/services/transmission-service";
 import { getCivilizationOverview } from "@/services/civilization-service";
@@ -53,14 +54,17 @@ export default async function CivilizationPage() {
       </header>
 
       <section className="relative z-10 px-6 lg:px-10 py-8 max-w-7xl mx-auto space-y-6">
-        <div>
-          <p className="nros-eyebrow">// civilization · v3</p>
-          <h1 className="text-3xl md:text-4xl font-semibold tracking-tight mt-1">
-            The federation, live.
-          </h1>
-          <p className="mt-2 text-sm text-muted-foreground max-w-2xl">
-            Every realm. Every wonder. Every transmission as it lands. Sign in to govern; this view is for everyone.
-          </p>
+        <div className="flex items-end justify-between gap-4 flex-wrap">
+          <div className="min-w-0">
+            <p className="nros-eyebrow">// civilization · v3</p>
+            <h1 className="text-3xl md:text-4xl font-semibold tracking-tight mt-1">
+              The federation, live.
+            </h1>
+            <p className="mt-2 text-sm text-muted-foreground max-w-2xl">
+              Every realm. Every wonder. Every transmission as it lands. Sign in to govern; this view is for everyone.
+            </p>
+          </div>
+          <OperatorSearch className="w-full md:w-72 shrink-0" />
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
