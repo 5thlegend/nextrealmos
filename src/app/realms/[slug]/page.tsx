@@ -10,6 +10,7 @@ import { createSupabaseServer } from "@/lib/supabase/server";
 import { listTransmissions } from "@/services/transmission-service";
 import { listWonders } from "@/services/wonder-service";
 import { getRealmLeaderboard } from "@/services/leaderboard-service";
+import { getCurrentOperator } from "@/services/operator-service";
 
 export const runtime = "edge";
 export const revalidate = 30;
@@ -39,12 +40,16 @@ export default async function PublicRealmPage({ params }: { params: Promise<{ sl
   if (!realm) notFound();
   const r = realm as RealmRow;
 
-  const [{ count: operatorCount }, transmissions, allWonders, leaderboard] = await Promise.all([
+  const [{ count: operatorCount }, transmissions, allWonders, leaderboard, viewer, ownerRow] = await Promise.all([
     supabase.from("operator_realms").select("operator_id", { count: "exact", head: true }).eq("realm_id", r.id),
     listTransmissions({ limit: 20, realmId: r.id }),
     listWonders(),
     getRealmLeaderboard(r.id, 12),
+    getCurrentOperator(),
+    supabase.from("realms").select("owner_operator_id").eq("id", r.id).maybeSingle(),
   ]);
+  const ownerId = (ownerRow.data as { owner_operator_id?: string } | null)?.owner_operator_id ?? null;
+  const isOwner = !!viewer && ownerId === viewer.profile.id;
 
   const wonders = allWonders.filter((w) => w.realm_id === r.id);
   const isVault = !!r.vaulted_at;
@@ -59,9 +64,15 @@ export default async function PublicRealmPage({ params }: { params: Promise<{ sl
           ← civilization
         </Link>
         <div className="flex items-center gap-2">
-          <Button asChild variant="ghost" size="sm">
-            <Link href="/sign-in?next=/grid">Sign in</Link>
-          </Button>
+          {isOwner ? (
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/realms/${r.slug}/admin`}>Owner admin</Link>
+            </Button>
+          ) : (
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/sign-in?next=/grid">Sign in</Link>
+            </Button>
+          )}
           {isLive && (
             <Button asChild size="sm">
               <a href={r.base_url!} target="_blank" rel="noreferrer">

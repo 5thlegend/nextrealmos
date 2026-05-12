@@ -1,4 +1,9 @@
 // Back-compat alias for older Operator Grid worker that calls /api/v1/...
-// (P0-1). Re-exports the same handlers as /api/federation/transmissions.
+// Re-exports the canonical handlers with explicit re-declaration so Next
+// can statically detect the runtime field.
 
-export { runtime, GET, POST } from "@/app/api/federation/transmissions/route";
+import * as canonical from "@/app/api/federation/transmissions/route";
+
+export const runtime = "edge";
+export const GET  = canonical.GET;
+export const POST = canonical.POST;
