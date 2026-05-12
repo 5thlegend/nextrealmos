@@ -1,7 +1,7 @@
 "use client";
 
 import { Handle, Position } from "@xyflow/react";
-import { Globe, Archive, Shield, Activity, Users, Zap } from "lucide-react";
+import { Globe, Archive, Shield, Users, Zap, Landmark } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type RealmNodeData = {
@@ -15,6 +15,7 @@ export type RealmNodeData = {
   agent_count: number;
   transmissions_24h: number;
   monthly_revenue_cents: number;
+  wonder_count?: number;
   isCore?: boolean;
 };
 
@@ -57,6 +58,15 @@ export function RealmNode({ data, selected }: { data: RealmNodeData; selected?: 
           <Stat icon={Shield}   n={data.elite_count}    label="elite" />
           <Stat icon={Zap}      n={data.agent_count}    label="ai" />
         </div>
+        {(data.wonder_count ?? 0) > 0 && (
+          <div className="flex items-center justify-between pt-1 border-t border-border/40">
+            <div className="flex items-center gap-1 font-mono text-[10px] text-nros-warn">
+              <Landmark className="h-2.5 w-2.5" />
+              <span>{data.wonder_count} wonder{(data.wonder_count ?? 0) === 1 ? "" : "s"}</span>
+            </div>
+            <span className="font-mono text-[9px] uppercase tracking-[0.18em] text-nros-warn">marquee</span>
+          </div>
+        )}
         {data.monthly_revenue_cents > 0 && (
           <div className="font-mono text-[10px] text-nros-warn pt-1 border-t border-border/40">
             ${Math.round(data.monthly_revenue_cents / 100).toLocaleString()}/mo

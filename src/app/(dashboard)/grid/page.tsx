@@ -1,20 +1,27 @@
 import { RealmGraphEngine } from "@/components/grid/realm-graph-engine";
+import { WondersStrip } from "@/components/nros/wonders-strip";
 import {
   getCivilizationOverview,
   listAgents,
   listEliteLeaders,
   listRealmNodes,
 } from "@/services/civilization-service";
+import { listWonders, getWonderCountsByRealm } from "@/services/wonder-service";
 
 export const runtime = "edge";
 
 export default async function GridPage() {
-  const [overview, realms, leaders, agents] = await Promise.all([
+  const [overview, realms, leaders, agents, wonders, wonderCountsMap] = await Promise.all([
     getCivilizationOverview(),
     listRealmNodes(),
     listEliteLeaders(),
     listAgents(),
+    listWonders(),
+    getWonderCountsByRealm(),
   ]);
+
+  const wonderCounts: Record<string, number> = {};
+  for (const [k, v] of wonderCountsMap.entries()) wonderCounts[k] = v;
 
   return (
     <div className="space-y-3 max-w-full">
@@ -28,11 +35,14 @@ export default async function GridPage() {
         </div>
       </header>
 
+      <WondersStrip wonders={wonders} />
+
       <RealmGraphEngine
         realms={realms}
         leaders={leaders}
         agents={agents}
         overview={overview}
+        wonderCounts={wonderCounts}
       />
     </div>
   );

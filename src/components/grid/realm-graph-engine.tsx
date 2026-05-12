@@ -31,14 +31,16 @@ export function RealmGraphEngine({
   leaders,
   agents,
   overview,
+  wonderCounts,
 }: {
   realms: RealmGraphNode[];
   leaders: EliteLeaderRow[];
   agents: AgentRow[];
   overview: CivilizationOverview | null;
+  wonderCounts?: Record<string, number>;
 }) {
   // Lay out realms in a hex-ish ring around the core.
-  const initial = useMemo(() => buildGraph(realms), [realms]);
+  const initial = useMemo(() => buildGraph(realms, wonderCounts ?? {}), [realms, wonderCounts]);
 
   const [nodes, , onNodesChange] = useNodesState<Node<RealmNodeData>>(initial.nodes);
   const [edges, , onEdgesChange] = useEdgesState<Edge>(initial.edges);
@@ -103,9 +105,9 @@ export function RealmGraphEngine({
 
 // ----- helpers -----
 
-function buildGraph(realms: RealmGraphNode[]): { nodes: Node<RealmNodeData>[]; edges: Edge[] } {
-  const core = realms.find((r) => r.slug === "nros-core");
-  const others = realms.filter((r) => r.slug !== "nros-core");
+function buildGraph(realms: RealmGraphNode[], wonderCounts: Record<string, number>): { nodes: Node<RealmNodeData>[]; edges: Edge[] } {
+  const core = realms.find((r) => r.slug === "nros-core" || r.slug === "nros");
+  const others = realms.filter((r) => r.id !== core?.id);
 
   const nodes: Node<RealmNodeData>[] = [];
   const edges: Edge[] = [];
@@ -115,7 +117,7 @@ function buildGraph(realms: RealmGraphNode[]): { nodes: Node<RealmNodeData>[]; e
       id: core.id,
       type: "realm",
       position: { x: 0, y: 0 },
-      data: { ...core, isCore: true },
+      data: { ...core, isCore: true, wonder_count: wonderCounts[core.id] ?? 0 },
     });
   }
 
@@ -128,7 +130,7 @@ function buildGraph(realms: RealmGraphNode[]): { nodes: Node<RealmNodeData>[]; e
       id: r.id,
       type: "realm",
       position: { x: Math.cos(angle) * radius, y: Math.sin(angle) * radius },
-      data: { ...r, isCore: false },
+      data: { ...r, isCore: false, wonder_count: wonderCounts[r.id] ?? 0 },
     });
     if (core) {
       edges.push({
