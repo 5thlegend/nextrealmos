@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { Award } from "lucide-react";
 import { Panel } from "@/components/nros/panel";
 import { Stat } from "@/components/nros/stat";
@@ -9,9 +10,41 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { listOperatorAchievementsByCallsign } from "@/services/achievement-service";
+import { getOperatorActivity } from "@/services/operator-service";
+import { ActivityHeatmap } from "@/components/nros/activity-heatmap";
 import { formatXp } from "@/lib/utils";
 
 export const runtime = "edge";
+
+export async function generateMetadata({ params }: { params: Promise<{ callsign: string }> }): Promise<Metadata> {
+  const { callsign } = await params;
+  const decoded = decodeURIComponent(callsign);
+  const { createSupabaseServer } = await import("@/lib/supabase/server");
+  const supabase = await createSupabaseServer();
+  const { data } = await supabase
+    .from("operator_profiles")
+    .select("callsign, bio, xp, ranks(name)")
+    .ilike("callsign", decoded)
+    .maybeSingle();
+
+  if (!data) return { title: "Operator not found · NROS" };
+  const r = data as { callsign: string; bio: string | null; xp: number; ranks: { name?: string } | null };
+  const rankName = r.ranks?.name ?? "Initiate";
+  const title = `${r.callsign} · ${rankName} · NROS`;
+  const description = r.bio ?? `${r.callsign} — ${rankName} operator with ${r.xp.toLocaleString()} XP in the Next Realm civilization federation.`;
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "profile",
+      url: `/operator/${encodeURIComponent(r.callsign)}`,
+      siteName: "NROS · Federation Kernel",
+    },
+    twitter: { card: "summary", title, description },
+  };
+}
 
 interface OperatorProfileRow {
   id: string;
@@ -24,6 +57,8 @@ interface OperatorProfileRow {
   followers_count: number | null;
   last_seen_at: string | null;
   created_at: string;
+  current_streak_days: number | null;
+  longest_streak_days: number | null;
 }
 
 interface RankRow {
@@ -47,14 +82,14 @@ export default async function PublicOperatorPage({ params }: { params: Promise<{
   const supabase = await createSupabaseServer();
   const { data: profile } = await supabase
     .from("operator_profiles")
-    .select("id, callsign, bio, avatar_url, xp, rank_id, influence_score, followers_count, last_seen_at, created_at")
+    .select("id, callsign, bio, avatar_url, xp, rank_id, influence_score, followers_count, last_seen_at, created_at, current_streak_days, longest_streak_days")
     .ilike("callsign", decoded)
     .maybeSingle();
 
   if (!profile) notFound();
   const op = profile as OperatorProfileRow;
 
-  const [rankRow, achRes, realmsRes] = await Promise.all([
+  const [rankRow, achRes, realmsRes, activity] = await Promise.all([
     op.rank_id
       ? supabase.from("ranks").select("id, name, tier, badge_color, order_index").eq("id", op.rank_id).maybeSingle()
       : Promise.resolve({ data: null }),
@@ -64,6 +99,7 @@ export default async function PublicOperatorPage({ params }: { params: Promise<{
       .select("realm_id, realm_xp, realms(slug, name, icon_url)")
       .eq("operator_id", op.id)
       .order("realm_xp", { ascending: false }),
+    getOperatorActivity(op.id, 30),
   ]);
 
   const rank = (rankRow.data ?? null) as RankRow | null;
@@ -96,6 +132,9 @@ export default async function PublicOperatorPage({ params }: { params: Promise<{
                 </Badge>
               )}
               <Badge>{formatXp(op.xp)} XP</Badge>
+              {op.current_streak_days && op.current_streak_days > 0 && (
+                <Badge variant="warn">🔥 {op.current_streak_days}d streak</Badge>
+              )}
               {op.influence_score && op.influence_score > 0 && <Badge variant="accent">{op.influence_score} influence</Badge>}
               <Badge variant="muted">since {new Date(op.created_at).getFullYear()}</Badge>
             </div>
@@ -118,6 +157,11 @@ export default async function PublicOperatorPage({ params }: { params: Promise<{
           <Stat label="// realms" value={realms.length} hint="federated" />
           <Stat label="// influence" value={op.influence_score ?? 0} hint={`${op.followers_count ?? 0} followers`} />
         </div>
+
+        {/* Activity heatmap (Steam-style 30-day grid) */}
+        <Panel eyebrow="// activity · last 30 days" title="Daily output">
+          <ActivityHeatmap data={activity} label="" />
+        </Panel>
 
         {/* Featured achievements (Steam showcase pattern) */}
         <Panel

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Brain, LogOut, Menu } from "lucide-react";
+import { Brain, Flame, LogOut, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useGenubraPanel } from "./genubra-panel-context";
@@ -44,12 +44,14 @@ export function Topbar({
   xp = 0,
   nextRankXp = null,
   nextRankName = null,
+  streak = 0,
 }: {
   callsign: string;
   rankName: string | null;
   xp?: number;
   nextRankXp?: number | null;
   nextRankName?: string | null;
+  streak?: number;
 }) {
   const { toggle } = useGenubraPanel();
   const initials = callsign.slice(0, 2).toUpperCase();
@@ -125,6 +127,16 @@ export function Topbar({
       </div>
 
       <div className="flex items-center gap-2 shrink-0">
+        {streak > 0 && (
+          <Link
+            href="/achievements"
+            className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-md border border-amber-500/40 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 transition-colors"
+            title={`${streak}-day activity streak`}
+          >
+            <Flame className={cn("h-3 w-3", streak >= 7 && "animate-pulse")} />
+            <span className="font-mono text-[11px] tabular-nums">{streak}d</span>
+          </Link>
+        )}
         <Button variant="outline" size="sm" onClick={toggle} aria-label="GENUBRA">
           <Brain className="h-4 w-4" />
           <span className="hidden sm:inline">GENUBRA</span>

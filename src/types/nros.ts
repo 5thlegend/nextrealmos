@@ -30,6 +30,14 @@ export interface OperatorProfile {
   squad_id: UUID | null;
   created_at: string;
   updated_at: string;
+  // V3.5 streak fields
+  current_streak_days?: number;
+  longest_streak_days?: number;
+  last_streak_date?: string | null;
+  // V3.1 influence fields
+  influence_score?: number;
+  followers_count?: number;
+  last_seen_at?: string | null;
 }
 
 export type MissionStatus = "DRAFT" | "ACTIVE" | "ARCHIVED";

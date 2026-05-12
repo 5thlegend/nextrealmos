@@ -11,7 +11,7 @@ import { getCurrentOperator } from "@/services/operator-service";
 import { listActiveMissions, getOperatorMissionProgress } from "@/services/mission-service";
 import { listWorkflows } from "@/services/workflow-service";
 import { getGlobalLeaderboard } from "@/services/leaderboard-service";
-import { getCivilizationProgress, listOperatorAchievements } from "@/services/achievement-service";
+import { getCivilizationProgress, listOperatorAchievements, getNextAchievements } from "@/services/achievement-service";
 import { formatXp } from "@/lib/utils";
 
 export const runtime = "edge";
@@ -26,13 +26,14 @@ const DIFF_COLOR: Record<string, string> = {
 
 export default async function DashboardPage() {
   const op = (await getCurrentOperator())!;
-  const [missions, progress, workflows, board, civProgress, achievements] = await Promise.all([
+  const [missions, progress, workflows, board, civProgress, achievements, nextUnlocks] = await Promise.all([
     listActiveMissions(),
     getOperatorMissionProgress(op.profile.id),
     listWorkflows(op.profile.id),
     getGlobalLeaderboard(10),
     getCivilizationProgress(op.profile.id),
     listOperatorAchievements(op.profile.id),
+    getNextAchievements(op.profile.id, 3),
   ]);
 
   const completed = progress.filter((p) => p.state === "COMPLETED").length;
@@ -56,16 +57,22 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6 max-w-7xl">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <Stat label="// xp" value={formatXp(op.profile.xp)} hint={op.rank?.name ?? "Initiate"} trend="up" />
         <Stat label="// missions" value={completed} hint={`${inFlight} in flight`} />
         <Stat
+          label="// streak"
+          value={`${op.profile.current_streak_days ?? 0}d`}
+          hint={`best · ${op.profile.longest_streak_days ?? 0}d`}
+          trend={(op.profile.current_streak_days ?? 0) > 0 ? "up" : "flat"}
+        />
+        <Stat
           label="// civilization"
           value={`${civProgress.pct}%`}
-          hint={`${civProgress.unlocked}/${civProgress.total} achievements`}
+          hint={`${civProgress.unlocked}/${civProgress.total}`}
           trend={civProgress.pct > 0 ? "up" : "flat"}
         />
-        <Stat label="// board position" value={myRank >= 0 ? `#${myRank + 1}` : "—"} hint="global top 10" />
+        <Stat label="// board" value={myRank >= 0 ? `#${myRank + 1}` : "—"} hint="global top 10" />
       </div>
 
       <Panel eyebrow="// progression" title="Rank trajectory" scanlines>
@@ -114,23 +121,31 @@ export default async function DashboardPage() {
 
         <Panel
           eyebrow="// civilization marks"
-          title="Recent achievements"
+          title={recentAchievements.length > 0 ? "Recent achievements" : "Next unlocks"}
           action={
             <Button asChild variant="outline" size="sm">
               <Link href="/achievements"><Award className="h-3 w-3" /> Trophy hall</Link>
             </Button>
           }
         >
-          {recentAchievements.length === 0 ? (
+          {recentAchievements.length === 0 && nextUnlocks.length === 0 ? (
             <div className="text-sm space-y-3">
-              <p className="text-muted-foreground">No achievements unlocked yet. The first one drops the moment you cross 100 XP, complete a mission, or push a transmission.</p>
+              <p className="text-muted-foreground">All visible achievements unlocked. Hidden ones await discovery.</p>
               <Button asChild size="sm">
                 <Link href="/achievements">View tech tree <ArrowRight className="h-3 w-3" /></Link>
               </Button>
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-3">
-              {recentAchievements.map((a) => <AchievementCard key={a.id} a={a} compact />)}
+              {recentAchievements.length > 0
+                ? recentAchievements.map((a) => <AchievementCard key={a.id} a={a} compact />)
+                : nextUnlocks.map((a) => <AchievementCard key={a.id} a={a} compact />)}
+              {recentAchievements.length > 0 && nextUnlocks[0] && (
+                <div className="border-t border-border/40 pt-2 mt-1">
+                  <p className="nros-eyebrow mb-2">// next unlock target</p>
+                  <AchievementCard a={nextUnlocks[0]} compact />
+                </div>
+              )}
             </div>
           )}
         </Panel>

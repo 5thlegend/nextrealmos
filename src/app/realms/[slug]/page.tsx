@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowUpRight, Landmark, RadioTower, Users } from "lucide-react";
+import type { Metadata } from "next";
+import { ArrowUpRight, Landmark, RadioTower } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Panel } from "@/components/nros/panel";
@@ -14,6 +15,35 @@ import { getCurrentOperator } from "@/services/operator-service";
 
 export const runtime = "edge";
 export const revalidate = 30;
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const { createSupabaseServer } = await import("@/lib/supabase/server");
+  const supabase = await createSupabaseServer();
+  const { data } = await supabase
+    .from("realms")
+    .select("name, description, slug, base_url, vaulted_at, status")
+    .ilike("slug", slug)
+    .maybeSingle();
+
+  if (!data) return { title: "Realm not found · NROS" };
+  const r = data as { name: string; description: string | null; slug: string; base_url: string | null; vaulted_at: string | null; status: string };
+  const status = r.vaulted_at ? "VAULTED" : r.status === "ACTIVE" && r.base_url ? "LIVE" : "IN DEVELOPMENT";
+  const title = `${r.name} · NROS Realm`;
+  const description = r.description ?? `${r.name} is a sovereign realm in the Next Realm civilization federation. Status: ${status}.`;
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      url: `/realms/${r.slug}`,
+      siteName: "NROS · Federation Kernel",
+    },
+    twitter: { card: "summary_large_image", title, description },
+  };
+}
 
 interface RealmRow {
   id: string;

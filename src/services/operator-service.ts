@@ -30,6 +30,44 @@ export async function getCurrentOperator(): Promise<{
   return { profile: profile as OperatorProfile, rank: current, nextRank: next };
 }
 
+/**
+ * Per-operator activity sparkline data — XP earned per day for the last N
+ * days. Used by the public dossier and the dashboard to render a Steam-
+ * style activity heatmap.
+ */
+export async function getOperatorActivity(operatorId: string, days = 30): Promise<Array<{ day: string; xp: number; events: number }>> {
+  const { createSupabaseAdmin } = await import("@/lib/supabase/server");
+  const admin = createSupabaseAdmin();
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+
+  const { data: rows } = await admin
+    .from("xp_logs")
+    .select("delta, created_at")
+    .eq("operator_id", operatorId)
+    .gte("created_at", since)
+    .order("created_at", { ascending: true });
+
+  const map = new Map<string, { xp: number; events: number }>();
+  for (let i = 0; i < days; i++) {
+    const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+    const key = d.toISOString().slice(0, 10);
+    map.set(key, { xp: 0, events: 0 });
+  }
+
+  for (const r of ((rows ?? []) as Array<{ delta: number; created_at: string }>)) {
+    const day = r.created_at.slice(0, 10);
+    const cur = map.get(day);
+    if (cur) {
+      cur.xp += Math.max(0, r.delta);
+      cur.events += 1;
+    }
+  }
+
+  return Array.from(map.entries())
+    .map(([day, v]) => ({ day, xp: v.xp, events: v.events }))
+    .sort((a, b) => a.day.localeCompare(b.day));
+}
+
 export async function ensureOperatorProfile(callsign?: string) {
   const supabase = await createSupabaseServer();
   const { data: { user } } = await supabase.auth.getUser();

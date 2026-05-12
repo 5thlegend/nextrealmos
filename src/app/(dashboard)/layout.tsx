@@ -24,6 +24,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             xp={op.profile.xp}
             nextRankXp={op.nextRank?.min_xp ?? null}
             nextRankName={op.nextRank?.name ?? null}
+            streak={op.profile.current_streak_days ?? 0}
           />
           <main className="flex-1 p-4 md:p-6 lg:p-8">{children}</main>
         </div>

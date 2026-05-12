@@ -91,6 +91,26 @@ export async function evaluateAchievements(operatorId: string): Promise<void> {
   await admin.rpc("nros_evaluate_achievements", { p_operator: operatorId });
 }
 
+/**
+ * Returns the next 3 visible achievements an operator hasn't unlocked yet,
+ * sorted by progression (lowest rarity first, then order_index). Drives
+ * the "next unlock" hint on the dashboard so dopamine has a clear target.
+ */
+export async function getNextAchievements(operatorId: string, limit = 3): Promise<AchievementWithStatus[]> {
+  const all = await listOperatorAchievements(operatorId);
+  const RARITY_RANK: Record<AchievementRarity, number> = {
+    COMMON: 0, UNCOMMON: 1, RARE: 2, EPIC: 3, MYTHIC: 4,
+  };
+  return all
+    .filter((a) => !a.unlocked && !a.secret)
+    .sort((a, b) => {
+      const r = RARITY_RANK[a.rarity] - RARITY_RANK[b.rarity];
+      if (r !== 0) return r;
+      return a.order_index - b.order_index;
+    })
+    .slice(0, limit);
+}
+
 export async function getCivilizationProgress(operatorId: string): Promise<{
   unlocked: number;
   total: number;
