@@ -35,10 +35,14 @@ const EVENT_GLYPH: Record<string, string> = {
   "operator.activation": "✦",
   "realm.attach":        "◈",
   "realm.vault":         "▽",
+  "realm.restore":       "△",
   "guild.create":        "◇",
   "mission.complete":    "✓",
   "achievement.unlock":  "★",
   "wonder.built":        "▣",
+  "subscription.intent": "$",
+  "subscription.start":  "$$",
+  "subscription.cancel": "×",
 };
 
 export function GalaxyTicker({ transmissions: initial }: { transmissions: Array<Record<string, unknown>> }) {

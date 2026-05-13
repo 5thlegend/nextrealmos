@@ -17,6 +17,7 @@ const EVENT_GLYPH: Record<string, string> = {
   "achievement.unlock": "★", "wonder.built": "▣",
   "influence.growth": "◐", "economy.transaction": "◎",
   "agent.deploy": "◉", "agent.fault": "⚠",
+  "subscription.intent": "$", "subscription.start": "$$", "subscription.cancel": "×",
 };
 
 const FILTER_PRESETS = [
@@ -28,6 +29,7 @@ const FILTER_PRESETS = [
   { value: "wonder.built",         label: "wonders" },
   { value: "mission.complete",     label: "missions" },
   { value: "guild.create",         label: "guilds" },
+  { value: "subscription.intent",  label: "$ intent" },
 ];
 
 export default async function TransmissionsPage({
