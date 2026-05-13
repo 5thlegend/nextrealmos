@@ -5,7 +5,10 @@
 //     normalized: string, suggestions?: string[] }
 //
 // Realm signup forms call this in real-time as the user types so callsigns
-// stay globally unique across the federation.
+// stay globally unique across the federation. Two-pass: try the rich query
+// (with source_realm_id join, V3.10+); if that errors because migration
+// 0015 hasn't been applied yet, fall back to a plain callsign existence
+// check so the surface stays useful even pre-migration.
 
 import { NextResponse } from "next/server";
 import { createSupabaseServer } from "@/lib/supabase/server";
@@ -30,21 +33,42 @@ export async function GET(req: Request) {
   }
 
   const supabase = await createSupabaseServer();
-  const { data } = await supabase
-    .from("operator_profiles")
-    .select("callsign, source_realm_id, realms:source_realm_id(slug)")
-    .eq("callsign", raw)
-    .maybeSingle();
 
-  if (!data) {
+  type CheckRow = { callsign?: string; realms?: { slug?: string } | null };
+
+  // Pass 1 (V3.10+): rich query with source_realm join
+  let row: CheckRow | null = null;
+  let queryErrored = false;
+  try {
+    const { data, error } = await supabase
+      .from("operator_profiles")
+      .select("callsign, source_realm_id, realms:source_realm_id(slug)")
+      .eq("callsign", raw)
+      .maybeSingle();
+    if (error) queryErrored = true;
+    else row = (data ?? null) as CheckRow | null;
+  } catch {
+    queryErrored = true;
+  }
+
+  // Pass 2 fallback: plain existence check (works pre-migration-0015)
+  if (queryErrored) {
+    const { data } = await supabase
+      .from("operator_profiles")
+      .select("callsign")
+      .eq("callsign", raw)
+      .maybeSingle();
+    row = (data ?? null) as CheckRow | null;
+  }
+
+  if (!row) {
     return NextResponse.json({ available: true, taken: false, normalized: raw });
   }
 
-  const row = data as { callsign: string; realms?: { slug?: string } | null };
   return NextResponse.json({
     available: false,
     taken: true,
-    normalized: row.callsign,
+    normalized: row.callsign ?? raw,
     taken_by_realm: row.realms?.slug ?? null,
     suggestions: [
       `${raw}_1`,
