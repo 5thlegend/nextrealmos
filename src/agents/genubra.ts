@@ -46,6 +46,46 @@ export function genubraStream(input: { ctx: GenubraContext; question: string; op
   });
 }
 
+/**
+ * Daily briefing — short, calibrated tactical recommendation. Output is one
+ * sentence on civilization context, one on operator-specific signal, then
+ * a single primary call (and optional fallback). Read at the top of the
+ * dashboard so the first thing the operator sees each session is "what
+ * should I do today."
+ */
+export async function genubraDailyBriefing(input: {
+  ctx: GenubraContext;
+  recentTransmissions?: string[];
+  inFlightMissions?: string[];
+  operatorId?: string | null;
+}): Promise<string> {
+  const recents = input.recentTransmissions?.slice(0, 5).map((t, i) => `${i + 1}. ${t}`).join("\n") ?? "(none)";
+  const inflight = input.inFlightMissions?.slice(0, 5).map((t, i) => `${i + 1}. ${t}`).join("\n") ?? "(none)";
+
+  return aiComplete({
+    surface: "AD_HOC",
+    system: SYSTEM,
+    user:
+`${operatorBriefing(input.ctx)}
+[RECENT FEDERATION TRAFFIC]
+${recents}
+
+[OPERATOR'S IN-FLIGHT MISSIONS]
+${inflight}
+
+[REQUEST]
+Produce the operator's "daily briefing." Output exactly:
+1. One sentence on civilization context (what the federation is doing).
+2. One sentence on operator-specific signal (where this operator's leverage is right now).
+3. PRIMARY CALL: <imperative verb-led one-liner, the single highest-leverage move for the next 4 hours>.
+4. (Optional) FALLBACK: <one alternate move if the primary is blocked>.
+
+Do not preamble. Do not number labels — write them as "PRIMARY CALL:" prefix only. Total under 90 words.`,
+    operatorId: input.operatorId ?? null,
+    maxTokens: 320,
+  });
+}
+
 export async function genubraSuggestMissions(input: { ctx: GenubraContext; objective: string; operatorId?: string | null }) {
   return aiComplete({
     surface: "MISSION_GEN",

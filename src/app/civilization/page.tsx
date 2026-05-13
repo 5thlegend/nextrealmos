@@ -7,6 +7,8 @@ import { Stat } from "@/components/nros/stat";
 import { WondersStrip } from "@/components/nros/wonders-strip";
 import { GalaxyTicker } from "@/components/nros/galaxy-ticker";
 import { OperatorSearch } from "@/components/nros/operator-search";
+import { FederationPulsePanel } from "@/components/nros/federation-pulse-panel";
+import { getFederationPulse } from "@/services/analytics-service";
 import { listPublicRealms } from "@/services/realm-service";
 import { listTransmissions } from "@/services/transmission-service";
 import { getCivilizationOverview } from "@/services/civilization-service";
@@ -20,11 +22,12 @@ export const revalidate = 30;
  * without signing in. /grid stays as the authenticated governance surface.
  */
 export default async function CivilizationPage() {
-  const [realms, transmissions, overview, wonders] = await Promise.all([
+  const [realms, transmissions, overview, wonders, pulse] = await Promise.all([
     listPublicRealms({ includeVaulted: true }),
     listTransmissions({ limit: 20 }),
     getCivilizationOverview(),
     listWonders(),
+    getFederationPulse(),
   ]);
 
   const active  = realms.filter((r) => r.status === "ACTIVE" && !r.vaulted_at);
@@ -76,6 +79,8 @@ export default async function CivilizationPage() {
         </div>
 
         <WondersStrip wonders={wonders} />
+
+        <FederationPulsePanel pulse={pulse} />
 
         <Panel
           eyebrow="// federation feed · live"

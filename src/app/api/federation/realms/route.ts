@@ -23,14 +23,18 @@ export async function GET(req: Request) {
 
   const url = new URL(req.url);
   const includeVaulted = url.searchParams.get("include_vaulted") === "1";
-  const realms = await listPublicRealms({ includeVaulted });
+
+  // Always fetch the full set so counts reflect truth, then trim the
+  // returned realms list per the includeVaulted flag.
+  const all = await listPublicRealms({ includeVaulted: true });
+  const visible = includeVaulted ? all : all.filter((r) => r.status === "ACTIVE" && !r.vaulted_at);
 
   return NextResponse.json({
-    realms,
+    realms: visible,
     counts: {
-      active:  realms.filter((r) => r.status === "ACTIVE" && !r.vaulted_at).length,
-      vaulted: realms.filter((r) => r.vaulted_at).length,
-      total:   realms.length,
+      active:  all.filter((r) => r.status === "ACTIVE" && !r.vaulted_at).length,
+      vaulted: all.filter((r) => r.vaulted_at).length,
+      total:   all.length,
     },
   });
 }

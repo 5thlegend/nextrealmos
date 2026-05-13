@@ -5,6 +5,7 @@ import { Stat } from "@/components/nros/stat";
 import { RankBar } from "@/components/nros/rank-bar";
 import { AchievementCard } from "@/components/nros/achievement-card";
 import { MissionRowActions } from "@/components/nros/mission-row-actions";
+import { DailyBriefing } from "@/components/nros/daily-briefing";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getCurrentOperator } from "@/services/operator-service";
@@ -57,6 +58,10 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6 max-w-7xl">
+      <Panel eyebrow="// genubra · daily briefing" title="What today should move" scanlines>
+        <DailyBriefing callsign={op.profile.callsign} />
+      </Panel>
+
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <Stat label="// xp" value={formatXp(op.profile.xp)} hint={op.rank?.name ?? "Initiate"} trend="up" />
         <Stat label="// missions" value={completed} hint={`${inFlight} in flight`} />
