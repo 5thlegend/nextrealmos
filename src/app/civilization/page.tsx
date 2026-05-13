@@ -9,6 +9,7 @@ import { GalaxyTicker } from "@/components/nros/galaxy-ticker";
 import { OperatorSearch } from "@/components/nros/operator-search";
 import { FederationPulsePanel } from "@/components/nros/federation-pulse-panel";
 import { getFederationPulse } from "@/services/analytics-service";
+import { listRealmTiers, formatPrice } from "@/services/monetization-service";
 import { listPublicRealms } from "@/services/realm-service";
 import { listTransmissions } from "@/services/transmission-service";
 import { getCivilizationOverview } from "@/services/civilization-service";
@@ -22,12 +23,16 @@ export const revalidate = 30;
  * without signing in. /grid stays as the authenticated governance surface.
  */
 export default async function CivilizationPage() {
-  const [realms, transmissions, overview, wonders, pulse] = await Promise.all([
+  const [realms, transmissions, overview, wonders, pulse, legvcyTiers] = await Promise.all([
     listPublicRealms({ includeVaulted: true }),
     listTransmissions({ limit: 20 }),
     getCivilizationOverview(),
     listWonders(),
     getFederationPulse(),
+    // LEGVCY is the launch monetization realm; surface its tiers as the
+    // "featured doctrine" on /civilization so visitors see the ladder
+    // without needing to dig into the realm dossier.
+    listRealmTiers("legvcy"),
   ]);
 
   const active  = realms.filter((r) => r.status === "ACTIVE" && !r.vaulted_at);
@@ -94,6 +99,43 @@ export default async function CivilizationPage() {
             <GalaxyTicker transmissions={transmissions as Array<Record<string, unknown>>} />
           )}
         </Panel>
+
+        {legvcyTiers.length > 0 && (
+          <Panel
+            eyebrow="// featured doctrine · legvcy · the way"
+            title="Subscribe to a realm's doctrine"
+            scanlines
+            action={
+              <Button asChild variant="outline" size="sm">
+                <Link href="/realms/legvcy/tiers">View all tiers <ArrowUpRight className="h-3 w-3" /></Link>
+              </Button>
+            }
+          >
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {legvcyTiers.map((tier) => (
+                <Link
+                  key={tier.id}
+                  href={`/realms/legvcy/tiers`}
+                  className="rounded-md border bg-card/70 p-4 transition-all hover:scale-[1.02] block"
+                  style={{ borderColor: `${tier.banner_color}55`, boxShadow: `0 0 18px -8px ${tier.banner_color}` }}
+                >
+                  <p className="font-semibold text-sm" style={{ color: tier.banner_color }}>{tier.name}</p>
+                  <p className="text-2xl font-semibold tabular-nums mt-1">
+                    {formatPrice(tier.price_cents, tier.currency)}
+                  </p>
+                  {tier.price_cents > 0 && (
+                    <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground">
+                      / {tier.interval}
+                    </p>
+                  )}
+                  {tier.tagline && (
+                    <p className="text-[11px] text-muted-foreground mt-2 line-clamp-2">{tier.tagline}</p>
+                  )}
+                </Link>
+              ))}
+            </div>
+          </Panel>
+        )}
 
         <Panel eyebrow={`// realms · ${realms.length}`} title="The federation">
           <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
