@@ -4,6 +4,7 @@ import { Topbar } from "@/components/nros/topbar";
 import { GenubraPanel } from "@/components/nros/genubra-panel";
 import { GenubraPanelProvider } from "@/components/nros/genubra-panel-context";
 import { AchievementToastStream } from "@/components/nros/achievement-toast-stream";
+import { NotificationsBell } from "@/components/nros/notifications-bell";
 import { getCurrentOperator } from "@/services/operator-service";
 import { env } from "@/lib/env";
 
@@ -25,6 +26,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             nextRankXp={op.nextRank?.min_xp ?? null}
             nextRankName={op.nextRank?.name ?? null}
             streak={op.profile.current_streak_days ?? 0}
+            bellSlot={<NotificationsBell operatorId={op.profile.id} />}
           />
           <main className="flex-1 p-4 md:p-6 lg:p-8">{children}</main>
         </div>

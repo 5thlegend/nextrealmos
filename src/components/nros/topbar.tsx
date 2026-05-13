@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import Link from "next/link";
 import { Brain, Flame, LogOut, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -45,6 +46,7 @@ export function Topbar({
   nextRankXp = null,
   nextRankName = null,
   streak = 0,
+  bellSlot,
 }: {
   callsign: string;
   rankName: string | null;
@@ -52,6 +54,7 @@ export function Topbar({
   nextRankXp?: number | null;
   nextRankName?: string | null;
   streak?: number;
+  bellSlot?: React.ReactNode;
 }) {
   const { toggle } = useGenubraPanel();
   const initials = callsign.slice(0, 2).toUpperCase();
@@ -137,6 +140,7 @@ export function Topbar({
             <span className="font-mono text-[11px] tabular-nums">{streak}d</span>
           </Link>
         )}
+        {bellSlot}
         <Button variant="outline" size="sm" onClick={toggle} aria-label="GENUBRA">
           <Brain className="h-4 w-4" />
           <span className="hidden sm:inline">GENUBRA</span>
