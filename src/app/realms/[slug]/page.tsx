@@ -11,6 +11,7 @@ import { createSupabaseServer } from "@/lib/supabase/server";
 import { listTransmissions } from "@/services/transmission-service";
 import { listWonders } from "@/services/wonder-service";
 import { getRealmLeaderboard } from "@/services/leaderboard-service";
+import { listRealmTiers, formatPrice } from "@/services/monetization-service";
 import { getCurrentOperator } from "@/services/operator-service";
 
 export const runtime = "edge";
@@ -70,13 +71,14 @@ export default async function PublicRealmPage({ params }: { params: Promise<{ sl
   if (!realm) notFound();
   const r = realm as RealmRow;
 
-  const [{ count: operatorCount }, transmissions, allWonders, leaderboard, viewer, ownerRow] = await Promise.all([
+  const [{ count: operatorCount }, transmissions, allWonders, leaderboard, viewer, ownerRow, tiers] = await Promise.all([
     supabase.from("operator_realms").select("operator_id", { count: "exact", head: true }).eq("realm_id", r.id),
     listTransmissions({ limit: 20, realmId: r.id }),
     listWonders(),
     getRealmLeaderboard(r.id, 12),
     getCurrentOperator(),
     supabase.from("realms").select("owner_operator_id").eq("id", r.id).maybeSingle(),
+    listRealmTiers(r.slug),
   ]);
   const ownerId = (ownerRow.data as { owner_operator_id?: string } | null)?.owner_operator_id ?? null;
   const isOwner = !!viewer && ownerId === viewer.profile.id;
@@ -137,6 +139,45 @@ export default async function PublicRealmPage({ params }: { params: Promise<{ sl
           <Stat label="// tx · live" value={transmissions.length} hint="recent events" />
           <Stat label="// since"     value={new Date(r.created_at).getFullYear()} hint="year of attach" />
         </div>
+
+        {tiers.length > 0 && (
+          <Panel
+            eyebrow={`// the way · ${tiers.length} tiers`}
+            title="Subscription doctrine"
+            scanlines
+            action={
+              <Button asChild size="sm">
+                <Link href={`/realms/${r.slug}/tiers`}>View all <ArrowUpRight className="h-3 w-3" /></Link>
+              </Button>
+            }
+          >
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {tiers.map((tier) => (
+                <Link
+                  key={tier.id}
+                  href={`/realms/${r.slug}/tiers`}
+                  className="rounded-md border bg-card/70 p-3 transition-colors hover:scale-[1.01]"
+                  style={{ borderColor: `${tier.banner_color}55` }}
+                >
+                  <p className="font-semibold text-sm" style={{ color: tier.banner_color }}>
+                    {tier.name}
+                  </p>
+                  <p className="text-xl font-semibold tabular-nums mt-1">
+                    {formatPrice(tier.price_cents, tier.currency)}
+                  </p>
+                  {tier.price_cents > 0 && (
+                    <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                      / {tier.interval}
+                    </p>
+                  )}
+                  {tier.tagline && (
+                    <p className="text-[11px] text-muted-foreground mt-2 line-clamp-2">{tier.tagline}</p>
+                  )}
+                </Link>
+              ))}
+            </div>
+          </Panel>
+        )}
 
         {wonders.length > 0 && (
           <Panel eyebrow={`// wonders · ${wonders.length}`} title="Federation marquee builds">

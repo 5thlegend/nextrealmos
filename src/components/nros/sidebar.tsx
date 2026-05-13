@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, Award, Globe, GitBranch, Landmark, LayoutDashboard, RadioTower, ScrollText, Trophy, User, Users, Workflow } from "lucide-react";
+import { Activity, Award, Coins, Globe, GitBranch, Landmark, LayoutDashboard, RadioTower, ScrollText, Trophy, User, Users, Workflow } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV = [
   { href: "/dashboard",     label: "Command",       icon: LayoutDashboard },
   { href: "/grid",          label: "Civilization",  icon: GitBranch },
   { href: "/wonders",       label: "Wonders",       icon: Landmark },
+  { href: "/armory",        label: "Money Factory", icon: Coins },
   { href: "/transmissions", label: "Transmissions", icon: RadioTower },
   { href: "/realms",        label: "Realms",        icon: Globe },
   { href: "/missions",      label: "Missions",      icon: ScrollText },
