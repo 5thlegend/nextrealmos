@@ -1,0 +1,55 @@
+=== build_exit=0 ===
+=== node v22.22.2 ===
+=== top-level files ===
+total 596
+drwxr-xr-x  12 runner runner   4096 May 14 03:54 .
+drwxr-xr-x   3 runner runner   4096 May 14 03:54 ..
+-rw-r--r--   1 runner runner    397 May 14 03:54 .env.example
+drwxr-xr-x   7 runner runner   4096 May 14 03:54 .git
+drwxr-xr-x   3 runner runner   4096 May 14 03:54 .github
+-rw-r--r--   1 runner runner    303 May 14 03:54 .gitignore
+drwxr-xr-x   7 runner runner   4096 May 14 03:55 .next
+drwxr-xr-x   3 runner runner   4096 May 14 03:54 .vercel
+-rw-r--r--   1 runner runner   6672 May 14 03:54 README.md
+-rw-r--r--   1 runner runner    429 May 14 03:54 components.json
+-rw-r--r--   1 runner runner   1851 May 14 03:54 deploy-from-built.sh
+-rw-r--r--   1 runner runner    261 May 14 03:54 deploy.cmd
+drwxr-xr-x   2 runner runner   4096 May 14 03:54 docs
+-rw-r--r--   1 runner runner    211 May 14 03:54 next-env.d.ts
+-rw-r--r--   1 runner runner   1571 May 14 03:54 next.config.ts
+drwxr-xr-x 520 runner runner  20480 May 14 03:54 node_modules
+-rw-r--r--   1 runner runner 487066 May 14 03:54 package-lock.json
+-rw-r--r--   1 runner runner   1928 May 14 03:54 package.json
+drwxr-xr-x   3 runner runner   4096 May 14 03:54 packages
+-rw-r--r--   1 runner runner     70 May 14 03:54 postcss.config.mjs
+drwxr-xr-x   2 runner runner   4096 May 14 03:54 scripts
+drwxr-xr-x  11 runner runner   4096 May 14 03:54 src
+drwxr-xr-x   3 runner runner   4096 May 14 03:54 supabase
+-rw-r--r--   1 runner runner   2697 May 14 03:54 tailwind.config.ts
+-rw-r--r--   1 runner runner    576 May 14 03:54 tsconfig.json
+-rw-r--r--   1 runner runner    687 May 14 03:54 wrangler.toml
+=== .vercel/output ===
+total 40
+drwxr-xr-x  5 runner runner  4096 May 14 03:55 .
+drwxr-xr-x  3 runner runner  4096 May 14 03:54 ..
+-rw-r--r--  1 runner runner   621 May 14 03:54 builds.json
+-rw-r--r--  1 runner runner 15091 May 14 03:55 config.json
+drwxr-xr-x  2 runner runner  4096 May 14 03:55 diagnostics
+drwxr-xr-x 33 runner runner  4096 May 14 03:55 functions
+drwxr-xr-x  5 runner runner  4096 May 14 03:55 static
+=== .vercel/output/static ===
+total 68
+drwxr-xr-x 5 runner runner  4096 May 14 03:55 .
+drwxr-xr-x 5 runner runner  4096 May 14 03:55 ..
+-rw-r--r-- 2 runner runner 16045 May 14 03:55 404.html
+-rw-r--r-- 1 runner runner     2 May 14 03:55 404.rsc.json
+-rw-r--r-- 2 runner runner  2007 May 14 03:55 500.html
+-rw-r--r-- 2 runner runner     2 May 14 03:55 __next_data_catchall.json
+-rw-r--r-- 1 runner runner     2 May 14 03:55 _app.rsc.json
+-rw-r--r-- 1 runner runner     2 May 14 03:55 _document.rsc.json
+-rw-r--r-- 1 runner runner     2 May 14 03:55 _error.rsc.json
+-rw-r--r-- 1 runner runner   214 May 14 03:55 _headers
+drwxr-xr-x 3 runner runner  4096 May 14 03:55 _next
+-rw-r--r-- 1 runner runner   122 May 14 03:55 _routes.json
+drwxr-xr-x 3 runner runner  4096 May 14 03:55 _worker.js
+drwxr-xr-x 3 runner runner  4096 May 14 03:55 cdn-cgi

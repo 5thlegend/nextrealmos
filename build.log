@@ -1,0 +1,211 @@
+⚡️ @cloudflare/next-on-pages CLI v.1.13.16
+⚡️ Detected Package Manager: npm (10.9.7)
+⚡️ Preparing project...
+⚡️ Project is ready
+⚡️ Building project...
+▲  Vercel CLI 47.0.4
+▲  > NOTE: The Vercel CLI now collects telemetry regarding usage of the CLI.
+▲  > This information is used to shape the CLI roadmap and prioritize features.
+▲  > You can learn more, including how to opt-out if you'd not like to participate in this program, by visiting the following URL:
+▲  > https://vercel.com/docs/cli/about-telemetry
+▲  WARN! Build not running on Vercel. System environment variables will not be available.
+▲  Installing dependencies...
+▲  added 6 packages in 2s
+▲  183 packages are looking for funding
+▲  run `npm fund` for details
+▲  Detected Next.js version: 15.1.3
+▲  Running "npm run build"
+▲  > nros-kernel@0.1.0 build
+▲  > next build
+▲  Attention: Next.js now collects completely anonymous telemetry regarding usage.
+▲  This information is used to shape Next.js' roadmap and prioritize features.
+▲  You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+▲  https://nextjs.org/telemetry
+▲  ▲ Next.js 15.1.3
+▲  
+▲  Creating an optimized production build ...
+▲  <w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (101kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+▲  <w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (231kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+▲  ✓ Compiled successfully
+▲  Linting and checking validity of types ...
+▲  Collecting page data ...
+▲  ⚠ Using edge runtime on a page currently disables static generation for that page
+▲  Generating static pages (0/3) ...
+▲  ✓ Generating static pages (3/3)
+▲  Finalizing page optimization ...
+▲  Collecting build traces ...
+▲  
+▲  Route (app)                                  Size     First Load JS
+▲  ┌ ƒ /                                        3.44 kB         175 kB
+▲  ├ ○ /_not-found                              245 B           106 kB
+▲  ├ ƒ /achievements                            245 B           106 kB
+▲  ├ ƒ /api/agents/briefing                     245 B           106 kB
+▲  ├ ƒ /api/agents/genubra                      245 B           106 kB
+▲  ├ ƒ /api/agents/missions/generate            245 B           106 kB
+▲  ├ ƒ /api/aura/lead                           245 B           106 kB
+▲  ├ ƒ /api/aura/og/[token]                     245 B           106 kB
+▲  ├ ƒ /api/aura/scan                           245 B           106 kB
+▲  ├ ƒ /api/ecosystem/status                    245 B           106 kB
+▲  ├ ƒ /api/federation/achievements             245 B           106 kB
+▲  ├ ƒ /api/federation/elite-leaders            245 B           106 kB
+▲  ├ ƒ /api/federation/missions                 245 B           106 kB
+▲  ├ ƒ /api/federation/operators                245 B           106 kB
+▲  ├ ƒ /api/federation/operators/[callsign]     245 B           106 kB
+▲  ├ ƒ /api/federation/operators/check          245 B           106 kB
+▲  ├ ƒ /api/federation/pulse                    245 B           106 kB
+▲  ├ ƒ /api/federation/realms                   245 B           106 kB
+▲  ├ ƒ /api/federation/realms/[slug]/appoint    245 B           106 kB
+▲  ├ ƒ /api/federation/realms/[slug]/vault      245 B           106 kB
+▲  ├ ƒ /api/federation/transmissions            245 B           106 kB
+▲  ├ ƒ /api/federation/wonders                  245 B           106 kB
+▲  ├ ƒ /api/federation/xp                       245 B           106 kB
+▲  ├ ƒ /api/notifications                       245 B           106 kB
+▲  ├ ƒ /api/og/nr                               245 B           106 kB
+▲  ├ ƒ /api/stripe/webhook                      245 B           106 kB
+▲  ├ ƒ /api/subscription/intent                 245 B           106 kB
+▲  ├ ƒ /api/v1/federation/achievements          245 B           106 kB
+▲  ├ ƒ /api/v1/federation/elite-leaders         245 B           106 kB
+▲  ├ ƒ /api/v1/federation/missions              245 B           106 kB
+▲  ├ ƒ /api/v1/federation/operators/[callsign]  245 B           106 kB
+▲  ├ ƒ /api/v1/federation/pulse                 245 B           106 kB
+▲  ├ ƒ /api/v1/federation/realms                245 B           106 kB
+▲  ├ ƒ /api/v1/federation/transmissions         245 B           106 kB
+▲  ├ ƒ /api/v1/federation/wonders               245 B           106 kB
+▲  ├ ƒ /api/v1/federation/xp                    245 B           106 kB
+▲  ├ ƒ /api/workflows                           245 B           106 kB
+▲  ├ ƒ /armory                                  209 B           109 kB
+▲  ├ ƒ /aura                                    2.3 kB          111 kB
+▲  ├ ƒ /aura/scan/[token]                       3.11 kB         112 kB
+▲  ├ ƒ /auth/sign-out                           245 B           106 kB
+▲  ├ ƒ /build                                   1.52 kB         173 kB
+▲  ├ ƒ /civilization                            3.01 kB         182 kB
+▲  ├ ƒ /dashboard                               3.54 kB         132 kB
+▲  ├ ƒ /dashboard/ecosystem                     209 B           109 kB
+▲  ├ ƒ /ecosystem                               1.52 kB         173 kB
+▲  ├ ƒ /forge                                   1.52 kB         173 kB
+▲  ├ ƒ /grid                                    61.4 kB         240 kB
+▲  ├ ƒ /leaderboard                             245 B           106 kB
+▲  ├ ƒ /missions                                193 B           129 kB
+▲  ├ ƒ /missions/[id]                           2.79 kB         124 kB
+▲  ├ ƒ /missions/new                            4.89 kB         126 kB
+▲  ├ ƒ /operator                                4.11 kB         116 kB
+▲  ├ ƒ /operator/[callsign]                     209 B           109 kB
+▲  ├ ƒ /operator/[callsign]/achievements        209 B           109 kB
+▲  ├ ƒ /operator/onboarding                     209 B           109 kB
+▲  ├ ƒ /realms                                  209 B           109 kB
+▲  ├ ƒ /realms/[slug]                           1.52 kB         173 kB
+▲  ├ ƒ /realms/[slug]/admin                     5.01 kB         130 kB
+▲  ├ ƒ /realms/[slug]/tiers                     1.64 kB         120 kB
+▲  ├ ƒ /realms/[slug]/tiers/[tier]/checkout     3.39 kB         128 kB
+▲  ├ ƒ /realms/new                              4.41 kB         126 kB
+▲  ├ ƒ /sign-in                                 3.5 kB          119 kB
+▲  ├ ƒ /sign-up                                 4.17 kB         120 kB
+▲  ├ ƒ /squads                                  209 B           109 kB
+▲  ├ ƒ /squads/new                              3.21 kB         115 kB
+▲  ├ ƒ /transmissions                           209 B           109 kB
+▲  ├ ƒ /wonders                                 209 B           109 kB
+▲  ├ ƒ /workflows                               209 B           109 kB
+▲  ├ ƒ /workflows/[id]                          245 B           106 kB
+▲  └ ƒ /workflows/new                           3.24 kB         125 kB
+▲  + First Load JS shared by all                105 kB
+▲  ├ chunks/1517-2e4251ea137218f3.js          50.5 kB
+▲  ├ chunks/4bd1b696-a5c73f0749b084d1.js      52.9 kB
+▲  └ other shared chunks (total)              1.95 kB
+▲  
+▲  
+▲  ƒ Middleware                                 87.3 kB
+▲  ○  (Static)   prerendered as static content
+▲  ƒ  (Dynamic)  server-rendered on demand
+▲  Traced Next.js server files in: 237.775ms
+▲  Created all serverless functions in: 50.584ms
+▲  Collected static files (public/, static/, .next/static): 14.708ms
+▲  Build Completed in .vercel/output [50s]
+⚡️ Completed `npx vercel build`.
+
+⚡️ Build Summary (@cloudflare/next-on-pages v1.13.16)
+⚡️ 
+⚡️ Middleware Functions (1)
+⚡️   - src/middleware
+⚡️ 
+⚡️ Edge Function Routes (70)
+⚡️   ┌ /
+⚡️   ├ /achievements
+⚡️   ├ /api/agents/briefing
+⚡️   ├ /api/agents/genubra
+⚡️   ├ /api/agents/missions/generate
+⚡️   ├ /api/aura/lead
+⚡️   ├ /api/aura/og/[token]
+⚡️   ├ /api/aura/scan
+⚡️   ├ /api/ecosystem/status
+⚡️   ├ /api/federation/achievements
+⚡️   ├ /api/federation/elite-leaders
+⚡️   ├ /api/federation/missions
+⚡️   ├ /api/federation/operators
+⚡️   ├ /api/federation/operators/[callsign]
+⚡️   ├ /api/federation/operators/check
+⚡️   ├ /api/federation/pulse
+⚡️   ├ /api/federation/realms
+⚡️   ├ /api/federation/realms/[slug]/appoint
+⚡️   ├ /api/federation/realms/[slug]/vault
+⚡️   ├ /api/federation/transmissions
+⚡️   ├ /api/federation/wonders
+⚡️   ├ /api/federation/xp
+⚡️   ├ /api/notifications
+⚡️   ├ /api/og/nr
+⚡️   ├ /api/stripe/webhook
+⚡️   ├ /api/subscription/intent
+⚡️   ├ /api/v1/federation/achievements
+⚡️   ├ /api/v1/federation/elite-leaders
+⚡️   ├ /api/v1/federation/missions
+⚡️   ├ /api/v1/federation/operators/[callsign]
+⚡️   ├ /api/v1/federation/pulse
+⚡️   ├ /api/v1/federation/realms
+⚡️   ├ /api/v1/federation/transmissions
+⚡️   ├ /api/v1/federation/wonders
+⚡️   ├ /api/v1/federation/xp
+⚡️   ├ /api/workflows
+⚡️   ├ /armory
+⚡️   ├ /aura
+⚡️   ├ /aura/scan/[token]
+⚡️   ├ /auth/sign-out
+⚡️   ├ /build
+⚡️   ├ /civilization
+⚡️   ├ /dashboard
+⚡️   ├ /dashboard/ecosystem
+⚡️   ├ /ecosystem
+⚡️   ├ /forge
+⚡️   ├ /grid
+⚡️   ├ /leaderboard
+⚡️   ├ /missions
+⚡️   ├ /missions/[id]
+⚡️   ├ /missions/new
+⚡️   ├ /operator
+⚡️   ├ /operator/[callsign]
+⚡️   ├ /operator/[callsign]/achievements
+⚡️   ├ /operator/onboarding
+⚡️   ├ /realms
+⚡️   ├ /realms/[slug]
+⚡️   ├ /realms/[slug]/admin
+⚡️   ├ /realms/[slug]/tiers
+⚡️   ├ /realms/[slug]/tiers/[tier]/checkout
+⚡️   ├ /realms/new
+⚡️   ├ /sign-in
+⚡️   ├ /sign-up
+⚡️   ├ /squads
+⚡️   ├ /squads/new
+⚡️   ├ /transmissions
+⚡️   ├ /wonders
+⚡️   ├ /workflows
+⚡️   ├ /workflows/[id]
+⚡️   └ /workflows/new
+⚡️ 
+⚡️ Other Static Assets (123)
+⚡️   ┌ /_app.rsc.json
+⚡️   ├ /_document.rsc.json
+⚡️   ├ /_error.rsc.json
+⚡️   ├ /404.html
+⚡️   └ ... 119 more
+
+⚡️ Build log saved to '.vercel/output/static/_worker.js/nop-build-log.json'
+⚡️ Generated '.vercel/output/static/_worker.js/index.js'.
+⚡️ Build completed in 20.76s
