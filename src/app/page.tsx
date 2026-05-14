@@ -51,6 +51,7 @@ export default async function Home() {
           </span>
         </div>
         <div className="flex items-center gap-2">
+          <Link href="/forge" className="nr-btn">Forge</Link>
           <Link href="/aura" className="nr-btn">Aura Scan</Link>
           <Link href="/civilization" className="nr-btn">Civilization</Link>
           <Link href="/sign-in?next=/dashboard" className="nr-btn">Sign in</Link>
