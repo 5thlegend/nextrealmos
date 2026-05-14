@@ -1,0 +1,1 @@
+var o={},i=(t,r,_)=>(o.__chunk_24966=(n,s,e)=>{Promise.resolve().then(e.bind(e,64720)),Promise.resolve().then(e.bind(e,55585))},o.__chunk_42270=(n,s,e)=>{Promise.resolve().then(e.bind(e,15815)),Promise.resolve().then(e.bind(e,47465))},o);export{i as __getNamedExports};

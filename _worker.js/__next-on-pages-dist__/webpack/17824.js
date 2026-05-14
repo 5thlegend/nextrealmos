@@ -1,0 +1,1 @@
+var t={},_=(c,o,s)=>(t.__chunk_17824=(r,l,e)=>{"use strict";e.d(l,{A:()=>a});let a=(0,e(77509).A)("Globe",[["circle",{cx:"12",cy:"12",r:"10",key:"1mglay"}],["path",{d:"M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20",key:"13o1zl"}],["path",{d:"M2 12h20",key:"9i4pu4"}]])},t);export{_ as __getNamedExports};

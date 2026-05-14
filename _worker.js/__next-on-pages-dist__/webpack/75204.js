@@ -1,0 +1,1 @@
+var s={},f=(_,d,p)=>(s.__chunk_75204=(b,t,e)=>{"use strict";e.r(t),e.d(t,{GET:()=>r,runtime:()=>o});var i=e(25601),a=e(21493),l=e(90908);let o="edge";async function r(u){let n=await(0,l.i)(u,{bucket:"fed:pulse",limit:60,windowMs:6e4});if(n)return n;let c=await(0,a.v)();return i.Rp.json({pulse:c})}},s);export{f as __getNamedExports};

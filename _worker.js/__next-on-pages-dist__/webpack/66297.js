@@ -1,0 +1,1 @@
+var s={},d=(c,_,i)=>(s.__chunk_66297=(u,t,e)=>{"use strict";e.r(t),e.d(t,{GET:()=>r,runtime:()=>l});var o=e(25601),a=e(34014);let l="edge";async function r(){let n=await(0,a.$)();return o.Rp.json({wonders:n,total:n.length})}},s);export{d as __getNamedExports};
