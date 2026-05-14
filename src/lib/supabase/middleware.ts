@@ -20,7 +20,24 @@ export async function updateSession(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
   const isAuthRoute = path.startsWith("/sign-in") || path.startsWith("/sign-up") || path.startsWith("/auth");
-  const isProtected = path.startsWith("/dashboard") || path.startsWith("/missions") || path.startsWith("/squads") || path.startsWith("/workflows") || path.startsWith("/operator");
+
+  // Protected = anything in the dashboard layout PLUS /operator/onboarding
+  // (which mints the operator profile). Public dossiers under
+  // /operator/[callsign] must NOT be protected — they're the social
+  // graph + share targets.
+  const isProtected =
+    path.startsWith("/dashboard")  ||
+    path.startsWith("/missions")   ||
+    path.startsWith("/squads")     ||
+    path.startsWith("/workflows")  ||
+    path.startsWith("/grid")       ||
+    path.startsWith("/wonders")    ||
+    path.startsWith("/transmissions") ||
+    path.startsWith("/leaderboard") ||
+    path.startsWith("/achievements") ||
+    path.startsWith("/armory")     ||
+    path === "/operator/onboarding" ||
+    path === "/operator";          // only the bare /operator route, not /operator/[callsign]
 
   if (!user && isProtected) {
     const url = request.nextUrl.clone();
