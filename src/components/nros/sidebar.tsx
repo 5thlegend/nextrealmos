@@ -32,8 +32,9 @@ const SECTIONS: Array<{
     layer: "ORCHESTRATION",
     caption: "internal · command",
     items: [
-      { href: "/dashboard",     label: "Command",       icon: LayoutDashboard },
-      { href: "/transmissions", label: "Transmissions", icon: RadioTower },
+      { href: "/dashboard",           label: "Command",       icon: LayoutDashboard },
+      { href: "/dashboard/ecosystem", label: "Ecosystem",     icon: Activity },
+      { href: "/transmissions",       label: "Transmissions", icon: RadioTower },
     ],
   },
   {
