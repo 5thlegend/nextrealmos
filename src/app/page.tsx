@@ -53,7 +53,7 @@ export default async function Home() {
         <div className="flex items-center gap-2">
           <Link href="/forge" className="nr-btn">Forge</Link>
           <Link href="/aura" className="nr-btn">Aura Scan</Link>
-          <Link href="/civilization" className="nr-btn">Civilization</Link>
+          <Link href="/ecosystem" className="nr-btn">Ecosystem</Link>
           <Link href="/sign-in?next=/dashboard" className="nr-btn">Sign in</Link>
           <Link href="/sign-in?next=/operator/onboarding" className="nr-btn nr-btn-magma">Enlist</Link>
         </div>

@@ -5,6 +5,7 @@ import { ArrowRight, Sparkles } from "lucide-react";
 import { getAuraScanByToken } from "@/services/aura-service";
 import { AuraScoreReveal } from "@/components/aura/aura-score-reveal";
 import { AuraLeadCapture } from "@/components/aura/aura-lead-capture";
+import { AuraShare } from "@/components/aura/aura-share";
 
 export const runtime = "edge";
 export const revalidate = 60;
@@ -17,10 +18,18 @@ export async function generateMetadata({ params }: { params: Promise<{ token: st
   const host = (() => { try { return new URL(scan.url).host; } catch { return scan.url; } })();
   const title = `Aura ${score} · ${host} · Next Realm`;
   const description = scan.vibe ?? `Calibrated aura score across aesthetics, conversion, positioning, signal, depth.`;
+  const ogImage = `/api/aura/og/${token}.svg`;
   return {
     title, description,
-    openGraph: { title, description, type: "website", url: `/aura/scan/${token}` },
-    twitter:   { card: "summary_large_image", title, description },
+    openGraph: {
+      title, description, type: "website", url: `/aura/scan/${token}`,
+      images: [{ url: ogImage, width: 1200, height: 630, alt: title }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title, description,
+      images: [ogImage],
+    },
   };
 }
 
@@ -166,9 +175,10 @@ export default async function AuraResultPage({ params }: { params: Promise<{ tok
               <p className="nr-display text-2xl mb-4" style={{ color: "hsl(var(--nr-text))" }}>
                 Aura <span className="nr-magma">{score}</span> · {host}
               </p>
-              <div className="flex items-center justify-center gap-2">
-                <ShareLink token={scan.share_token} />
-              </div>
+              <AuraShare token={scan.share_token} score={score} host={host} />
+              <p className="text-[11px] mt-4 font-mono" style={{ color: "hsl(var(--nr-muted))" }}>
+                // every share renders a cinematic OG card with the score + vibe
+              </p>
             </div>
           </>
         )}
@@ -218,19 +228,6 @@ function AxisBar({ label, value }: { label: string; value: number }) {
              }} />
       </div>
     </div>
-  );
-}
-
-function ShareLink({ token }: { token: string }) {
-  // Server-rendered link; client component would let us add copy-to-clipboard
-  return (
-    <code className="font-mono text-[11px] px-3 py-2 rounded-sm border"
-          style={{
-            borderColor: "hsla(var(--nr-text), 0.16)",
-            color: "hsl(var(--nr-text))",
-          }}>
-      nextrealmos.pages.dev/aura/scan/{token}
-    </code>
   );
 }
 
