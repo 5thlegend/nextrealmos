@@ -77,7 +77,7 @@ export function Topbar({
           <Menu className="h-4 w-4" />
         </Button>
         <Link href="/operator" className="space-y-0.5 min-w-0 hover:text-primary transition-colors">
-          <p className="nros-eyebrow">// operator</p>
+          <p className="nros-eyebrow">// orchestration · operator</p>
           <p className="text-sm font-semibold tracking-tight truncate">{callsign}</p>
         </Link>
         {rankName && (
