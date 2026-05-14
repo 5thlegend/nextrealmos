@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { listRealmTiers, formatPrice } from "@/services/monetization-service";
 import { getRealmBySlug } from "@/services/realm-service";
+import { SubscribeButton } from "@/components/monetization/subscribe-button";
 
 export const runtime = "edge";
 export const revalidate = 60;
@@ -105,26 +106,30 @@ export default async function RealmTiersPage({ params }: { params: Promise<{ slu
                     </Badge>
                   </div>
                 )}
-                <Button
-                  asChild
-                  size="sm"
-                  className="w-full"
-                  style={{ background: tier.banner_color, color: "#0a0a0a" }}
-                >
-                  <Link href={`/sign-in?next=/realms/${slug}/tiers/${tier.slug}/checkout`}>
-                    {tier.price_cents === 0 ? "Activate" : `Subscribe ${formatPrice(tier.price_cents)}`}
-                  </Link>
-                </Button>
+                {tier.price_cents === 0 ? (
+                  <Button asChild size="sm" className="w-full"
+                          style={{ background: tier.banner_color, color: "#0a0a0a" }}>
+                    <Link href={`/sign-in?next=/realms/${slug}`}>Activate</Link>
+                  </Button>
+                ) : (
+                  <SubscribeButton
+                    tierId={tier.id}
+                    tierName={tier.name}
+                    bannerColor={tier.banner_color}
+                    priceLabel={formatPrice(tier.price_cents, tier.currency)}
+                    source={`tier_card:${slug}:${tier.slug}`}
+                  />
+                )}
               </div>
             ))}
           </div>
         )}
 
-        <Panel eyebrow="// note">
+        <Panel eyebrow="// how it works">
           <p className="text-xs text-muted-foreground">
-            Stripe checkout integration is the next wave. Today, this page renders the tier ladder
-            so realms can publish doctrine and operators can preview what they&apos;re subscribing to.
-            When Stripe wiring lands, &ldquo;Subscribe&rdquo; takes you straight to checkout.
+            Click a tier to record your intent. The federation captures the
+            signal immediately; once Stripe is wired, the same button takes
+            you to checkout — no rebuild required.
           </p>
         </Panel>
       </section>
