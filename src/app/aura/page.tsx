@@ -14,6 +14,13 @@ export const metadata: Metadata = {
     title: "Aura Scanner · Next Realm",
     description: "Brutally honest scoring. Aesthetics · Conversion · Positioning · Signal · Depth.",
     type: "website",
+    images: [{ url: "/api/og/nr?surface=aura", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Aura Scanner · Next Realm",
+    description: "Brutally honest scoring across 5 axes. See the one fix that matters.",
+    images: ["/api/og/nr?surface=aura"],
   },
 };
 

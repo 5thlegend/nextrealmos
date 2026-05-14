@@ -18,6 +18,19 @@ export const metadata: Metadata = {
   title: "Next Realm OS · Internal Command Center",
   description: "Cinematic operator infrastructure for the Next Realm ecosystem. Sovereign operators · federated realms · one identity, one signal, one economy.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
+  openGraph: {
+    title: "Next Realm OS · Internal Command Center",
+    description: "Cinematic operator infrastructure for the next civilization.",
+    type: "website",
+    siteName: "Next Realm",
+    images: [{ url: "/api/og/nr?surface=os", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Next Realm OS",
+    description: "Cinematic operator infrastructure for the next civilization.",
+    images: ["/api/og/nr?surface=os"],
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -18,6 +18,13 @@ export const metadata: Metadata = {
     title: "The Ecosystem · Next Realm",
     description: "The complete map of the Next Realm civilization.",
     type: "website",
+    images: [{ url: "/api/og/nr?surface=ecosystem", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "The Ecosystem · Next Realm",
+    description: "Every layer. Every realm. Every wonder. One scroll.",
+    images: ["/api/og/nr?surface=ecosystem"],
   },
 };
 

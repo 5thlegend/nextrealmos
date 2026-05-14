@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Activity, ArrowUpRight, Brain, GitBranch, Landmark, RadioTower, Shield, Workflow, Zap } from "lucide-react";
+import { AuraScanForm } from "@/components/aura/aura-scan-form";
 import { Button } from "@/components/ui/button";
 import { listPublicRealms } from "@/services/realm-service";
 import { listTransmissions } from "@/services/transmission-service";
@@ -76,20 +77,22 @@ export default async function Home() {
           orchestrated through this kernel.
         </p>
 
-        <div className="mt-10 flex flex-wrap gap-3">
+        {/* Embedded Aura scanner — zero clicks to acquisition motion */}
+        <div className="mt-10 max-w-2xl">
+          <p className="nr-eyebrow mb-3">— start here · scan any URL</p>
+          <AuraScanForm />
+        </div>
+
+        <div className="mt-8 flex flex-wrap gap-3">
           <Link href="/sign-in?next=/operator/onboarding" className="nr-btn nr-btn-magma">
             Enlist as operator
           </Link>
-          <Link href="/civilization" className="nr-btn">
-            See the civilization <ArrowUpRight className="h-3 w-3" />
+          <Link href="/forge" className="nr-btn nr-btn-gold">
+            Talk to the Forge
           </Link>
-          <a
-            href="https://github.com/5thlegend/nextrealmos/blob/main/docs/FEDERATION_PROTOCOL.md"
-            target="_blank" rel="noreferrer"
-            className="nr-btn nr-btn-gold"
-          >
-            Read the protocol
-          </a>
+          <Link href="/ecosystem" className="nr-btn">
+            See the ecosystem <ArrowUpRight className="h-3 w-3" />
+          </Link>
         </div>
       </section>
 
