@@ -194,16 +194,28 @@ export default async function AuraResultPage({ params }: { params: Promise<{ tok
 }
 
 function FailedState({ scan }: { scan: { error: string | null; url: string } }) {
+  const host = (() => { try { return new URL(scan.url).host; } catch { return scan.url; } })();
+  const mailto = `mailto:hello@nextrealm.io?subject=${encodeURIComponent(`Manual aura audit · ${host}`)}&body=${encodeURIComponent(
+    `Auto-scan couldn't reach ${scan.url} (${scan.error ?? "fetch failed"}).\n\nI'd like a manual audit.`,
+  )}`;
   return (
-    <div className="nr-card p-8 text-center">
-      <p className="nr-eyebrow nr-magma mb-2">— scan failed</p>
-      <h2 className="nr-display text-2xl mb-3" style={{ color: "hsl(var(--nr-text))" }}>
-        Couldn&apos;t reach {scan.url}
+    <div className="nr-card p-8 md:p-10 text-center"
+         style={{ borderColor: "hsla(var(--nr-magma), 0.5)" }}>
+      <p className="nr-eyebrow nr-magma mb-2">— auto-scan blocked</p>
+      <h2 className="nr-display text-2xl md:text-3xl mb-3" style={{ color: "hsl(var(--nr-text))" }}>
+        We couldn&apos;t reach <span className="nr-magma">{host}</span> automatically.
       </h2>
-      <p className="text-sm mb-5" style={{ color: "hsl(var(--nr-muted))" }}>
-        {scan.error ?? "The page may be blocked, slow, or behind auth. Try a different URL."}
+      <p className="text-sm mb-2 max-w-xl mx-auto" style={{ color: "hsl(var(--nr-muted))" }}>
+        {scan.error ?? "The page may be blocked, slow, or behind auth."}
       </p>
-      <Link href="/aura" className="nr-btn nr-btn-magma">Scan again</Link>
+      <p className="text-sm mb-6 max-w-xl mx-auto" style={{ color: "hsl(var(--nr-muted))" }}>
+        That&apos;s actually a signal — most auto-bots can&apos;t read it either. Want a sharper read? We can audit it manually.
+      </p>
+      <div className="flex flex-wrap gap-3 justify-center">
+        <a href={mailto} className="nr-btn nr-btn-magma">Get a manual audit</a>
+        <Link href="/aura" className="nr-btn">Scan a different URL</Link>
+        <Link href="/forge" className="nr-btn nr-btn-gold">Talk to the Forge</Link>
+      </div>
     </div>
   );
 }
