@@ -1,11 +1,13 @@
 // POST /api/subscription/intent
-// Records the click-to-subscribe intent BEFORE Stripe wires up.
 // Body: { tier_id, email?, source? }
-// Returns: { intent_id, redirect_url }
 //
-// Today: returns the existing onboarding redirect path so the click
-// completes the funnel even pre-Stripe. Once STRIPE_SECRET_KEY lands,
-// upgrade this route to create a Checkout Session and return its URL.
+// Always records the click as a subscription_intent (lead + federation tx).
+// Then:
+//   - If STRIPE_SECRET_KEY is set AND tier has stripe_price_id → creates a
+//     real Stripe Checkout Session, marks intent CHECKOUT_STARTED, returns
+//     checkout_url. Stripe failures fall through gracefully.
+//   - Otherwise returns the pre-Stripe redirect (sign-in or back-to-tiers).
+// Same response shape so SubscribeButton just reads checkout_url || redirect_url.
 
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -13,6 +15,7 @@ import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { getCurrentOperator } from "@/services/operator-service";
 import { rateLimit } from "@/lib/rate-limit";
 import { pushTransmission } from "@/services/transmission-service";
+import { isStripeConfigured, createCheckoutSession } from "@/services/stripe-service";
 
 export const runtime = "edge";
 
@@ -35,14 +38,18 @@ export async function POST(req: Request) {
   const op = await getCurrentOperator();
   const admin = createSupabaseAdmin();
 
-  // Look up the tier so we can produce a sensible redirect + transmit
+  // Look up the tier (now also reads stripe_price_id for the Stripe path)
   const { data: tier } = await admin
     .from("realm_subscription_tiers")
-    .select("id, slug, name, price_cents, currency, realm_id, realms(slug, name)")
+    .select("id, slug, name, price_cents, currency, stripe_price_id, realm_id, realms(slug, name)")
     .eq("id", parsed.data.tier_id)
     .maybeSingle();
   if (!tier) return NextResponse.json({ error: "tier not found" }, { status: 404 });
-  type TierRow = { id: string; slug: string; name: string; price_cents: number; currency: string; realm_id: string; realms: { slug?: string; name?: string } | null };
+  type TierRow = {
+    id: string; slug: string; name: string; price_cents: number; currency: string;
+    stripe_price_id: string | null; realm_id: string;
+    realms: { slug?: string; name?: string } | null;
+  };
   const t = tier as TierRow;
 
   const { data: ins, error: insErr } = await admin
@@ -65,10 +72,9 @@ export async function POST(req: Request) {
   if (insErr) {
     return NextResponse.json({ error: insErr.message }, { status: 500 });
   }
+  const intentId = (ins as { id: string }).id;
 
-  // Federation transmission so the intent shows in the live ticker.
-  // Only push for non-anonymous intents (operator OR captured email)
-  // to avoid spamming the feed with empty bot clicks.
+  // Federation transmission for non-anonymous clicks
   if (op || parsed.data.email) {
     await pushTransmission({
       realmId:     t.realm_id,
@@ -85,18 +91,54 @@ export async function POST(req: Request) {
     }).catch(() => undefined);
   }
 
-  // Pre-Stripe redirect:
-  //   - signed-in operator → /sign-in?next=/realms/[slug]/tiers (lands back on tiers w/ intent recorded)
-  //   - anon → /sign-in?next=/realms/[slug]/tiers
-  // Once Stripe is wired, we'll return a checkout.url here instead.
+  // STRIPE PATH — only if both: key set AND tier has price_id
+  const stripeReady = isStripeConfigured() && !!t.stripe_price_id;
+  if (stripeReady && t.stripe_price_id) {
+    const origin = new URL(req.url).origin;
+    try {
+      const session = await createCheckoutSession({
+        priceId: t.stripe_price_id,
+        customerEmail: op ? null : (parsed.data.email ?? null),
+        successUrl: `${origin}/realms/${t.realms?.slug ?? ""}/tiers?intent=${intentId}&checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+        cancelUrl:  `${origin}/realms/${t.realms?.slug ?? ""}/tiers?intent=${intentId}&checkout=cancelled`,
+        clientReferenceId: intentId,
+        metadata: {
+          intent_id:   intentId,
+          tier_id:     t.id,
+          tier_slug:   t.slug,
+          realm_slug:  t.realms?.slug ?? "",
+          operator_id: op?.profile.id ?? "",
+          callsign:    op?.profile.callsign ?? "",
+          source:      parsed.data.source ?? "tier_card",
+        },
+      });
+      if (session) {
+        await admin
+          .from("subscription_intents")
+          .update({ status: "CHECKOUT_STARTED", stripe_session_id: session.id })
+          .eq("id", intentId);
+        return NextResponse.json({
+          intent_id:    intentId,
+          tier:         { id: t.id, name: t.name, price_cents: t.price_cents, currency: t.currency },
+          checkout_url: session.url,
+          stripe_ready: true,
+        });
+      }
+    } catch (e) {
+      // Don't fail the click — lead is still captured. Fall through.
+      console.error("[stripe] checkout failed:", e instanceof Error ? e.message : e);
+    }
+  }
+
+  // PRE-STRIPE / FALLBACK
   const redirect_url = op
-    ? `/realms/${t.realms?.slug ?? ""}/tiers?intent=${(ins as { id: string }).id}`
-    : `/sign-in?next=${encodeURIComponent(`/realms/${t.realms?.slug ?? ""}/tiers?intent=${(ins as { id: string }).id}`)}`;
+    ? `/realms/${t.realms?.slug ?? ""}/tiers?intent=${intentId}`
+    : `/sign-in?next=${encodeURIComponent(`/realms/${t.realms?.slug ?? ""}/tiers?intent=${intentId}`)}`;
 
   return NextResponse.json({
-    intent_id: (ins as { id: string }).id,
-    tier:      { id: t.id, name: t.name, price_cents: t.price_cents, currency: t.currency },
+    intent_id:    intentId,
+    tier:         { id: t.id, name: t.name, price_cents: t.price_cents, currency: t.currency },
     redirect_url,
-    stripe_ready: false, // flips true when STRIPE_SECRET_KEY is set
+    stripe_ready: false,
   });
 }

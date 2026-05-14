@@ -109,45 +109,75 @@ export default async function PublicOperatorPage({ params }: { params: Promise<{
   const initials = op.callsign.slice(0, 2).toUpperCase();
 
   return (
-    <div className="min-h-screen">
-      {/* Hero band — Steam-style profile card */}
-      <div
-        className="border-b border-border/60 bg-gradient-to-b from-card/60 to-background"
-        style={{
-          backgroundImage:
-            "radial-gradient(900px 400px at 20% 0%, hsla(178, 92%, 56%, 0.08), transparent 60%), radial-gradient(700px 400px at 100% 0%, hsla(258, 80%, 70%, 0.08), transparent 55%)",
-        }}
-      >
-        <div className="max-w-6xl mx-auto px-4 md:px-6 py-8 md:py-12 flex flex-col md:flex-row items-start md:items-center gap-6">
-          <Avatar className="h-24 w-24 ring-2 ring-primary/40">
-            <AvatarFallback className="text-2xl">{initials}</AvatarFallback>
-          </Avatar>
+    <div className="min-h-screen nr-skin">
+      {/* Hero band — Next Realm canonical, Steam-style profile card */}
+      <div className="relative border-b" style={{ borderColor: "hsla(var(--nr-text), 0.08)" }}>
+        <div className="max-w-6xl mx-auto px-4 md:px-6 py-10 md:py-14 flex flex-col md:flex-row items-start md:items-center gap-6">
+          <div
+            className="h-24 w-24 rounded-sm border-2 grid place-items-center shrink-0"
+            style={{
+              borderColor: "hsla(var(--nr-magma), 0.6)",
+              background: "hsla(var(--nr-magma), 0.06)",
+              color: "hsl(var(--nr-magma))",
+              fontFamily: "var(--font-cormorant), serif",
+              fontSize: "44px",
+              fontWeight: 500,
+              boxShadow: "0 0 40px -16px hsla(var(--nr-magma), 0.7)",
+            }}
+          >
+            {initials}
+          </div>
+
           <div className="flex-1 min-w-0">
-            <p className="nros-eyebrow">// operator dossier · public</p>
-            <h1 className="text-3xl md:text-4xl font-semibold tracking-tight mt-1">{op.callsign}</h1>
-            <div className="mt-2 flex flex-wrap gap-2">
+            <p className="nr-eyebrow">— operator dossier · public</p>
+            <h1 className="nr-display text-4xl md:text-6xl mt-2" style={{ color: "hsl(var(--nr-text))" }}>
+              {op.callsign}
+            </h1>
+            <div className="mt-3 flex flex-wrap gap-2">
               {rank && (
-                <Badge style={{ borderColor: `${rank.badge_color}66`, color: rank.badge_color, backgroundColor: `${rank.badge_color}11` }}>
+                <span className="font-mono text-[10px] uppercase tracking-[0.18em] px-2 py-1 rounded-sm border"
+                      style={{ color: rank.badge_color, borderColor: `${rank.badge_color}66`, background: `${rank.badge_color}11` }}>
                   {rank.name}
-                </Badge>
+                </span>
               )}
-              <Badge>{formatXp(op.xp)} XP</Badge>
+              <span className="font-mono text-[10px] uppercase tracking-[0.18em] px-2 py-1 rounded-sm border nr-magma"
+                    style={{ borderColor: "hsla(var(--nr-magma), 0.5)", background: "hsla(var(--nr-magma), 0.08)" }}>
+                {formatXp(op.xp)} XP
+              </span>
               {op.current_streak_days && op.current_streak_days > 0 && (
-                <Badge variant="warn">🔥 {op.current_streak_days}d streak</Badge>
+                <span className="font-mono text-[10px] uppercase tracking-[0.18em] px-2 py-1 rounded-sm border nr-gold"
+                      style={{ borderColor: "hsla(var(--nr-gold), 0.5)", background: "hsla(var(--nr-gold), 0.08)" }}>
+                  🔥 {op.current_streak_days}d streak
+                </span>
               )}
-              {op.influence_score && op.influence_score > 0 && <Badge variant="accent">{op.influence_score} influence</Badge>}
-              <Badge variant="muted">since {new Date(op.created_at).getFullYear()}</Badge>
+              {op.influence_score && op.influence_score > 0 && (
+                <span className="font-mono text-[10px] uppercase tracking-[0.18em] px-2 py-1 rounded-sm border"
+                      style={{ color: "hsl(var(--nr-gold))", borderColor: "hsla(var(--nr-gold), 0.4)" }}>
+                  {op.influence_score} influence
+                </span>
+              )}
+              <span className="font-mono text-[10px] uppercase tracking-[0.18em] px-2 py-1 rounded-sm"
+                    style={{ color: "hsl(var(--nr-muted))" }}>
+                since {new Date(op.created_at).getFullYear()}
+              </span>
             </div>
-            {op.bio && <p className="mt-3 text-sm text-muted-foreground max-w-2xl">{op.bio}</p>}
+            {op.bio && (
+              <p className="mt-4 text-base leading-relaxed max-w-2xl"
+                 style={{ color: "hsl(var(--nr-muted))", fontStyle: "italic" }}>
+                {op.bio}
+              </p>
+            )}
           </div>
           <div className="shrink-0 hidden md:block">
-            <Button asChild variant="outline" size="sm">
-              <Link href={`/operator/${encodeURIComponent(op.callsign)}/achievements`}>
-                <Award className="h-3 w-3" /> All achievements
-              </Link>
-            </Button>
+            <Link
+              href={`/operator/${encodeURIComponent(op.callsign)}/achievements`}
+              className="nr-btn nr-btn-gold"
+            >
+              <Award className="h-3 w-3" /> All achievements
+            </Link>
           </div>
         </div>
+        <div className="nr-rule max-w-md mx-6" />
       </div>
 
       <div className="max-w-6xl mx-auto px-4 md:px-6 py-6 space-y-6">

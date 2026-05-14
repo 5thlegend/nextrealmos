@@ -87,49 +87,49 @@ export default async function PublicRealmPage({ params }: { params: Promise<{ sl
   const isVault = !!r.vaulted_at;
   const isLive  = !isVault && !!r.base_url;
 
-  return (
-    <main className="relative min-h-screen overflow-hidden">
-      <div className="pointer-events-none absolute inset-0 nros-scanlines opacity-25" />
+  const stateAccent = isVault ? "#A78BFA" : isLive ? "hsl(var(--nr-magma))" : "hsl(var(--nr-muted))";
+  const stateLabel = isVault ? "VAULTED" : isLive ? "LIVE" : "IN DEVELOPMENT";
 
-      <header className="relative z-10 flex items-center justify-between px-6 lg:px-10 py-6 border-b border-border/40">
-        <Link href="/civilization" className="font-mono text-xs tracking-[0.24em] uppercase hover:text-primary">
+  return (
+    <main className="relative min-h-screen overflow-hidden nr-skin">
+      <header className="relative z-10 flex items-center justify-between px-6 lg:px-10 py-6">
+        <Link href="/civilization" className="font-mono text-[11px] tracking-[0.28em] uppercase hover:nr-magma transition-colors"
+              style={{ color: "hsl(var(--nr-muted))" }}>
           ← civilization
         </Link>
         <div className="flex items-center gap-2">
           {isOwner ? (
-            <Button asChild variant="outline" size="sm">
-              <Link href={`/realms/${r.slug}/admin`}>Owner admin</Link>
-            </Button>
+            <Link href={`/realms/${r.slug}/admin`} className="nr-btn nr-btn-gold">Owner admin</Link>
           ) : (
-            <Button asChild variant="ghost" size="sm">
-              <Link href="/sign-in?next=/grid">Sign in</Link>
-            </Button>
+            <Link href="/sign-in?next=/grid" className="nr-btn">Sign in</Link>
           )}
           {isLive && (
-            <Button asChild size="sm">
-              <a href={r.base_url!} target="_blank" rel="noreferrer">
-                Open realm <ArrowUpRight className="h-3 w-3" />
-              </a>
-            </Button>
+            <a href={r.base_url!} target="_blank" rel="noreferrer" className="nr-btn nr-btn-magma">
+              Open realm <ArrowUpRight className="h-3 w-3" />
+            </a>
           )}
         </div>
       </header>
 
-      <section
-        className="relative z-10 border-b border-border/40"
-        style={{
-          backgroundImage: "radial-gradient(900px 400px at 0% 0%, hsla(178, 92%, 56%, 0.10), transparent 60%)",
-        }}
-      >
-        <div className="px-6 lg:px-10 py-10 max-w-6xl mx-auto">
-          <p className="nros-eyebrow">// realm dossier</p>
-          <div className="flex items-center gap-3 mt-1">
-            <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">{r.name}</h1>
-            {isVault ? <Badge variant="accent">VAULTED</Badge> : isLive ? <Badge>LIVE</Badge> : <Badge variant="muted">IN DEVELOPMENT</Badge>}
+      <section className="relative z-10">
+        <div className="px-6 lg:px-10 pt-8 pb-10 max-w-6xl mx-auto">
+          <p className="nr-eyebrow">— realm dossier · /{r.slug}</p>
+          <div className="flex items-center gap-3 mt-2">
+            <h1 className="nr-display text-4xl md:text-6xl" style={{ color: "hsl(var(--nr-text))" }}>{r.name}</h1>
+            <span
+              className="font-mono text-[10px] uppercase tracking-[0.18em] px-2 py-1 rounded-sm border"
+              style={{ color: stateAccent, borderColor: `${stateAccent}55`, background: `${stateAccent}11` }}
+            >
+              {stateLabel}
+            </span>
           </div>
-          <p className="font-mono text-xs text-muted-foreground mt-1">/{r.slug}</p>
-          {r.description && <p className="mt-4 text-sm text-muted-foreground max-w-2xl">{r.description}</p>}
+          {r.description && (
+            <p className="mt-5 text-base leading-relaxed max-w-2xl" style={{ color: "hsl(var(--nr-muted))" }}>
+              {r.description}
+            </p>
+          )}
         </div>
+        <div className="nr-rule max-w-md mx-6 lg:mx-10" />
       </section>
 
       <section className="relative z-10 px-6 lg:px-10 py-6 max-w-6xl mx-auto space-y-6">
