@@ -54,7 +54,7 @@ export async function runAuraScan(input: {
   pageTitle?: string;
   operatorId?: string | null;
 }): Promise<AuraResult> {
-  const excerpt = (input.pageText ?? "").slice(0, 4000);
+  const excerpt = String(input.pageText ?? "").slice(0, 4000);
 
   const prompt =
 `[PAGE URL] ${input.url}
@@ -66,21 +66,42 @@ ${excerpt || "(no readable content extracted)"}
 [REQUEST]
 Return the aura analysis as strict JSON per the schema in your system prompt.`;
 
-  const raw = await aiComplete({
-    surface: "AD_HOC",
-    system: SYSTEM,
-    user: prompt,
-    operatorId: input.operatorId ?? null,
-    maxTokens: 600,
-  });
+  let raw: unknown;
+  try {
+    raw = await aiComplete({
+      surface: "AD_HOC",
+      system: SYSTEM,
+      user: prompt,
+      operatorId: input.operatorId ?? null,
+      maxTokens: 600,
+    });
+  } catch (e) {
+    // Surface the AI provider error precisely instead of letting it bubble
+    // as a generic "scan failed".
+    const msg = e instanceof Error ? e.message : String(e);
+    throw new Error(`AI provider error: ${msg}`);
+  }
 
   return parseAuraResult(raw);
 }
 
 /** Strip the LLM's stray markdown fences and parse. Falls back to a
  *  conservative default if the LLM hallucinates structure. */
-function parseAuraResult(raw: string): AuraResult {
-  let text = raw.trim();
+function parseAuraResult(raw: unknown): AuraResult {
+  // Defensive: aiComplete may occasionally return non-string (provider
+  // wrapping, error envelope, etc.). Coerce safely before any string ops.
+  let text: string;
+  if (typeof raw === "string") {
+    text = raw.trim();
+  } else if (raw && typeof raw === "object") {
+    // Some providers wrap output as { result: "..." } or { response: "..." }
+    const obj = raw as Record<string, unknown>;
+    const candidate = obj.result ?? obj.response ?? obj.output ?? obj.text ?? obj.content ?? JSON.stringify(raw);
+    text = String(candidate ?? "").trim();
+  } else {
+    text = String(raw ?? "").trim();
+  }
+  if (!text) return fallback("AURA returned empty output. Try re-scanning.");
   // Strip ```json … ``` fences
   text = text.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/i, "");
   // First {...} block
