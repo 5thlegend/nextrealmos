@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { Activity, ArrowUpRight, Brain, GitBranch, Landmark, RadioTower, Shield, Workflow, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { listPublicRealms } from "@/services/realm-service";
 import { listTransmissions } from "@/services/transmission-service";
 import { getCivilizationOverview } from "@/services/civilization-service";
@@ -40,51 +39,55 @@ export default async function Home() {
   ];
 
   return (
-    <main className="relative min-h-screen overflow-hidden">
-      <div className="pointer-events-none absolute inset-0 nros-scanlines opacity-30" />
-
+    <main className="relative min-h-screen overflow-hidden nr-skin">
       <header className="relative z-10 flex items-center justify-between px-6 lg:px-10 py-6">
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-md bg-primary/15 border border-primary/40 grid place-items-center">
-            <span className="font-mono text-[10px] text-primary">NR</span>
+          <div className="h-8 w-8 rounded-sm border grid place-items-center"
+               style={{ borderColor: "hsla(var(--nr-magma), 0.6)", background: "hsla(var(--nr-magma), 0.08)" }}>
+            <span className="font-mono text-[10px] nr-magma">NR</span>
           </div>
-          <span className="font-mono text-sm tracking-[0.24em] uppercase">NROS · FEDERATION KERNEL</span>
+          <span className="font-mono text-[11px] tracking-[0.28em] uppercase" style={{ color: "hsl(var(--nr-text))" }}>
+            NEXT REALM · OS
+          </span>
         </div>
-        <div className="flex items-center gap-3">
-          <Button asChild variant="ghost" size="sm">
-            <Link href="/civilization">Civilization</Link>
-          </Button>
-          <Button asChild variant="ghost" size="sm">
-            <Link href="/sign-in?next=/dashboard">Sign in</Link>
-          </Button>
-          <Button asChild size="sm">
-            <Link href="/sign-in?next=/operator/onboarding">Enlist</Link>
-          </Button>
+        <div className="flex items-center gap-2">
+          <Link href="/civilization" className="nr-btn">Civilization</Link>
+          <Link href="/sign-in?next=/dashboard" className="nr-btn">Sign in</Link>
+          <Link href="/sign-in?next=/operator/onboarding" className="nr-btn nr-btn-magma">Enlist</Link>
         </div>
       </header>
 
-      <section className="relative z-10 px-6 lg:px-10 pt-8 pb-10 max-w-6xl mx-auto">
-        <Badge variant="outline" className="mb-6">// next.realm.federation // kernel v3 · DIVINE-SYNC</Badge>
-        <h1 className="text-4xl md:text-6xl font-semibold tracking-tight leading-[1.05] max-w-5xl">
-          The federation kernel for <span className="text-primary">sovereign operator realms</span>.
+      <section className="relative z-10 px-6 lg:px-10 pt-12 pb-10 max-w-6xl mx-auto">
+        <p className="nr-eyebrow mb-8">— internal command center · NEXT REALM ECOSYSTEM</p>
+
+        <h1 className="nr-display text-5xl md:text-7xl max-w-5xl"
+            style={{ color: "hsl(var(--nr-text))" }}>
+          Cinematic operator infrastructure for the <span className="nr-magma italic">next civilization</span>.
         </h1>
-        <p className="mt-6 max-w-2xl text-base md:text-lg text-muted-foreground">
-          NROS is <strong className="text-foreground">infrastructure</strong> — the synchronization spine that
-          binds independently deployable realms into one civilization. Not a website. Not a dashboard.
-          The wiring underneath everything.
+
+        <div className="nr-rule mt-10 max-w-md" />
+
+        <p className="mt-8 max-w-2xl text-base md:text-lg leading-relaxed"
+           style={{ color: "hsl(var(--nr-muted))" }}>
+          The internal command layer behind the Next Realm ecosystem.
+          Sovereign operators. Federated realms. One identity, one signal, one economy —
+          orchestrated through this kernel.
         </p>
-        <div className="mt-6 flex flex-wrap gap-3">
-          <Button asChild size="lg">
-            <Link href="/sign-in?next=/operator/onboarding">Enlist as operator</Link>
-          </Button>
-          <Button asChild size="lg" variant="outline">
-            <Link href="/civilization">See the civilization <ArrowUpRight className="h-3 w-3" /></Link>
-          </Button>
-          <Button asChild size="lg" variant="ghost">
-            <a href="https://github.com/5thlegend/nextrealmos/blob/main/docs/FEDERATION_PROTOCOL.md" target="_blank" rel="noreferrer">
-              Read the protocol <ArrowUpRight className="h-3 w-3" />
-            </a>
-          </Button>
+
+        <div className="mt-10 flex flex-wrap gap-3">
+          <Link href="/sign-in?next=/operator/onboarding" className="nr-btn nr-btn-magma">
+            Enlist as operator
+          </Link>
+          <Link href="/civilization" className="nr-btn">
+            See the civilization <ArrowUpRight className="h-3 w-3" />
+          </Link>
+          <a
+            href="https://github.com/5thlegend/nextrealmos/blob/main/docs/FEDERATION_PROTOCOL.md"
+            target="_blank" rel="noreferrer"
+            className="nr-btn nr-btn-gold"
+          >
+            Read the protocol
+          </a>
         </div>
       </section>
 

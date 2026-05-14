@@ -4,6 +4,8 @@
 
 @layer base {
   :root {
+    /* ---------- NROS internal palette (cyan/violet) — kept for the
+         command-center surfaces that already work in this language. ---------- */
     --background: 220 30% 4%;
     --foreground: 210 40% 96%;
 
@@ -33,6 +35,24 @@
     --ring: 178 92% 56%;
 
     --radius: 0.5rem;
+
+    /* ---------- NEXT REALM canonical palette — apply on public-facing
+         surfaces and any new build (Aura Scanner, Forge polish, Money
+         Factory app shells). Cinematic + premium + breathable.
+         Reference hex (for documentation):
+           bg     #0A0A0B   →  240 9% 4%
+           card   #17181C   →  225 8% 10%
+           text   #F5F5F2   →  60 20% 96%
+           muted  #8E9196   →  225 6% 57%
+           magma  #FF5A36   →  10 100% 60%
+           gold   #D6A756   →  39 60% 59%
+       ---------- */
+    --nr-bg:     240  9%  4%;
+    --nr-card:   225  8% 10%;
+    --nr-text:    60 20% 96%;
+    --nr-muted:  225  6% 57%;
+    --nr-magma:   10 100% 60%;
+    --nr-gold:    39 60% 59%;
   }
 
   * { @apply border-border; }
@@ -47,6 +67,18 @@
       linear-gradient(hsla(180, 30%, 70%, 0.02) 1px, transparent 1px),
       linear-gradient(90deg, hsla(180, 30%, 70%, 0.02) 1px, transparent 1px);
     background-size: auto, auto, 32px 32px, 32px 32px;
+  }
+
+  /* When a section opts into the Next Realm canonical theme, swap the
+     ambient gradients to the magma/gold ones. Add `.nr-skin` to a
+     wrapper element. */
+  .nr-skin {
+    background-color: hsl(var(--nr-bg));
+    color:            hsl(var(--nr-text));
+    background-image:
+      radial-gradient(900px 500px at 50% -10%, hsla(var(--nr-magma), 0.10), transparent 55%),
+      radial-gradient(700px 420px at 100% 110%, hsla(var(--nr-gold), 0.06), transparent 50%);
+    background-attachment: fixed;
   }
 }
 
@@ -77,5 +109,77 @@
   .nros-rule-cyber::before {
     content: "";
     @apply block h-px w-12 bg-primary mb-2;
+  }
+
+  /* ---------- NEXT REALM canonical components (cinematic + premium) ---------- */
+  .nr-display {
+    /* Cormorant on hero typography — calm, intentional, premium. */
+    font-family: var(--font-cormorant), "Cormorant Garamond", "Times New Roman", serif;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    line-height: 1.05;
+  }
+  .nr-eyebrow {
+    @apply font-mono uppercase;
+    color: hsl(var(--nr-muted));
+    font-size: 11px;
+    letter-spacing: 0.24em;
+  }
+  .nr-card {
+    background-color: hsla(var(--nr-card), 0.72);
+    border: 1px solid hsla(var(--nr-text), 0.08);
+    border-radius: 4px;
+    backdrop-filter: blur(14px);
+  }
+  .nr-magma {
+    color: hsl(var(--nr-magma));
+  }
+  .nr-magma-bg {
+    background-color: hsl(var(--nr-magma));
+    color: hsl(var(--nr-bg));
+  }
+  .nr-gold {
+    color: hsl(var(--nr-gold));
+  }
+  .nr-rule {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, hsla(var(--nr-magma), 0.55), transparent);
+  }
+  .nr-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border: 1px solid hsla(var(--nr-text), 0.16);
+    background: transparent;
+    color: hsl(var(--nr-text));
+    font-family: var(--font-inter), sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    transition: all 180ms ease;
+  }
+  .nr-btn:hover {
+    background: hsla(var(--nr-magma), 0.08);
+    border-color: hsl(var(--nr-magma));
+    color: hsl(var(--nr-magma));
+  }
+  .nr-btn-magma {
+    background: hsl(var(--nr-magma));
+    border-color: hsl(var(--nr-magma));
+    color: hsl(var(--nr-bg));
+  }
+  .nr-btn-magma:hover {
+    background: hsla(var(--nr-magma), 0.85);
+    color: hsl(var(--nr-bg));
+  }
+  .nr-btn-gold {
+    background: transparent;
+    border-color: hsla(var(--nr-gold), 0.6);
+    color: hsl(var(--nr-gold));
+  }
+  .nr-btn-gold:hover {
+    background: hsla(var(--nr-gold), 0.08);
+    border-color: hsl(var(--nr-gold));
   }
 }
